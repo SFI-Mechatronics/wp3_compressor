@@ -25,6 +25,7 @@ void killHandler(int)
 
 int main(int argc, char **argv)
 {
+	// Initialize ROS
 	ros::init(argc, argv, _DEFAULTNODENAME, ros::init_options::NoSigintHandler | ros::init_options::AnonymousName);
 	ros::NodeHandle nh("~");
 
@@ -58,17 +59,20 @@ int main(int argc, char **argv)
 
 		wp3::CloudCompressor compressor(outputTopic, inputTopic, localFrame, globalFrame, resolution, _IFRAMERATE, minPT, maxPT, _STATISTICS);
 
-		//		wp3::CloudDecompressor decompressor(sensorName, _TOPICOUT, false);
-
-		std::cout << 3.0f * sizeof (float) << std::endl;
 		while(ros::ok()){
+			#if _STATISTICS
 			time_t start = clock();
+			#endif
 
 			ros::spinOnce();
+
+			#if _STATISTICS
 			clock_t end = clock();
 			double time = (double) (end-start) / CLOCKS_PER_SEC * 1000.0;
-			if(_STATISTICS)
+		//	if(_STATISTICS)
 				std::cout << time << std::endl;
+			#endif
+
 			loopRate.sleep();
 		}
 

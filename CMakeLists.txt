@@ -117,8 +117,8 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   include
-  ${boost_INCLIDE_DIRS}
   ${catkin_INCLUDE_DIRS}
+  ${boost_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -135,9 +135,9 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node 
-	src/main.cpp
-	src/octree_compression.cpp
-	src/compressor.cpp
+  src/octree_compression.cpp
+  src/compressor.cpp
+  src/main.cpp
 )
 
 ## Rename C++ executable without prefix
