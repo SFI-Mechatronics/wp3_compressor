@@ -8,9 +8,12 @@ project(wp3_compressor)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  pcl_ros
   roscpp
+  rostime
+  tf
   std_msgs
+  sensor_msgs
+  pcl_ros
 )
 
 ## System dependencies are found with CMake's conventions
@@ -105,7 +108,7 @@ find_package(Boost REQUIRED COMPONENTS thread)
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES jetson_node
-  CATKIN_DEPENDS pcl_ros roscpp std_msgs
+  CATKIN_DEPENDS pcl_ros
 #  DEPENDS system_lib
 )
 
