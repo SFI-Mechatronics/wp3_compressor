@@ -34,17 +34,49 @@ int main(int argc, char **argv)
 
 	ros::Rate loopRate(_ROSRATE);
 
+
 	if(!nh.hasParam("sensor_name"))
 		ROS_ERROR("%s","Missing _sensor_name:=<name> parameter! Shutting down...");
 	else if(!nh.hasParam("resolution"))
 		ROS_ERROR("%s","Missing _resolution:=<resolution> parameter! Shutting down...");
 	else {
+	
+	    std::string outputTopic; 
+		std::string inputTopic;
+		std::string localFrame;
+		std::string globalFrame; 
 
 		std::string sensorName;
 		nh.getParam("sensor_name", sensorName);
 
 		double resolution;
 		nh.getParam("resolution", resolution);
+        
+        int sensorType = 0;
+        if(nh.hasParam("sensor_type"))
+		    nh.getParam("sensor_type", sensorType);
+		    
+		switch(sensorType) {
+		
+		
+		case 0: // Kinect
+		 	std::cout << "Starting node using KINECT V2" << std::endl;
+		    outputTopic = "/" + sensorName + _TOPICOUT;
+		    inputTopic = "/" + sensorName + _KINECTPOINTS;
+		    localFrame = sensorName + _KINECTFRAME;
+		    globalFrame = _GLOBALFRAME;
+		    break;
+
+        case 1: // Realsense
+   			std::cout << "Starting node using INTEL REALSENSE" << std::endl;
+            outputTopic = "/" + sensorName + _TOPICOUT + "_rs";
+            inputTopic = "/camera/depth_registered/points";
+            localFrame = "camera_aligned_depth_to_color_frame";
+            globalFrame = _GLOBALFRAME;
+            break;
+            
+        } // End switch(sensorType)
+
 
 		ros::Duration(1.0).sleep();
 
@@ -52,12 +84,9 @@ int main(int argc, char **argv)
 		minPT << _MINX, _MINY, _MINZ, 1;
 		maxPT << _MAXX, _MAXY, _MAXZ, 1;
 
-		std::string outputTopic = "/" + sensorName + _TOPICOUT;
-		std::string inputTopic = "/" + sensorName + _KINECTPOINTS;
-		std::string localFrame = sensorName + _KINECTFRAME;
-		std::string globalFrame = _GLOBALFRAME;
-
+		
 		wp3::CloudCompressor compressor(outputTopic, inputTopic, localFrame, globalFrame, resolution, _IFRAMERATE, minPT, maxPT, _STATISTICS);
+		
 
 		while(ros::ok()){
 			#if _STATISTICS
@@ -69,8 +98,7 @@ int main(int argc, char **argv)
 			#if _STATISTICS
 			clock_t end = clock();
 			double time = (double) (end-start) / CLOCKS_PER_SEC * 1000.0;
-		//	if(_STATISTICS)
-				std::cout << time << std::endl;
+			std::cout << "ROS Cycle time: " << time << " ms" << std::endl;
 			#endif
 
 			loopRate.sleep();
