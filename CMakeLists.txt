@@ -108,7 +108,7 @@ find_package(Boost REQUIRED COMPONENTS thread)
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES jetson_node
-  CATKIN_DEPENDS pcl_ros
+  CATKIN_DEPENDS roscpp rostime tf std_msgs sensor_msgs pcl_ros
 #  DEPENDS system_lib
 )
 
@@ -156,6 +156,7 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
+  ${boost_LIBRARIES}
 )
 
 #############
