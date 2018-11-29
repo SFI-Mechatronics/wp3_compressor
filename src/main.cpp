@@ -39,9 +39,11 @@ int main(int argc, char **argv)
 		ROS_ERROR("%s","Missing _sensor_name:=<name> parameter! Shutting down...");
 	else if(!nh.hasParam("resolution"))
 		ROS_ERROR("%s","Missing _resolution:=<resolution> parameter! Shutting down...");
+  else if(!nh.hasParam("sensor_type"))
+    ROS_ERROR("%s","Missing _sensor_type:=<0: Kinect, 1: Velodyne> parameter! Shutting down...");
 	else {
 	
-	    std::string outputTopic; 
+    std::string outputTopic;
 		std::string inputTopic;
 		std::string localFrame;
 		std::string globalFrame; 
@@ -52,9 +54,8 @@ int main(int argc, char **argv)
 		double resolution;
 		nh.getParam("resolution", resolution);
         
-        int sensorType = 0;
-        if(nh.hasParam("sensor_type"))
-		    nh.getParam("sensor_type", sensorType);
+    int sensorType;
+    nh.getParam("sensor_type", sensorType);
 		    
 		switch(sensorType) {
 		
@@ -67,15 +68,15 @@ int main(int argc, char **argv)
 		    globalFrame = _GLOBALFRAME;
 		    break;
 
-        case 1: // Realsense
-   			std::cout << "Starting node using INTEL REALSENSE" << std::endl;
-            outputTopic = "/" + sensorName + _TOPICOUT + "_rs";
-            inputTopic = "/camera/depth_registered/points";
-            localFrame = "camera_aligned_depth_to_color_frame";
-            globalFrame = _GLOBALFRAME;
-            break;
-            
-        } // End switch(sensorType)
+    case 2: // Velodyne
+    std::cout << "Starting node using VELODYNE" << std::endl;
+        outputTopic = "/" + sensorName + _TOPICOUT + "_velodyne";
+        inputTopic = "/velodyne_points";
+        localFrame = "velodyne";
+        globalFrame = _GLOBALFRAME;
+        break;
+
+    } // End switch(sensorType)
 
 
 		ros::Duration(1.0).sleep();

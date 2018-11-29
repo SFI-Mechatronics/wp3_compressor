@@ -88,8 +88,8 @@ void CloudCompressor::roscallback(const PointCloud::ConstPtr &cloud){
 		//				PCL_INFO ("Number of points in cropped cloud: %.0f\n", cropped_size);
 		//				PCL_INFO ("Size cropped point cloud: %f kBytes\n\n", static_cast<float> ((cropped_size) * (3.0f * sizeof (float))) / 1024.0f);
 
-		logStream_ << input_size << "\t" << static_cast<float> ((input_size) * (3.0f * sizeof (float))) / 1024.0f << "\t";
-		logStream_ << cropped_size << "\t" << static_cast<float> ((cropped_size) * (3.0f * sizeof (float))) / 1024.0f << "\t";
+    logStream_ << input_size << "\t" << static_cast<float> ((input_size) * (4.0f * sizeof (float))) / 1024.0f << "\t";
+    logStream_ << cropped_size << "\t" << static_cast<float> ((cropped_size) * (4.0f * sizeof (float))) / 1024.0f << "\t";
 		logStream_ << time << std::endl;
 	}
 

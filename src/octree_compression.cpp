@@ -85,12 +85,12 @@ void PointCloudCompression::encodePointCloud (const PointCloudConstPtr &cloud_ar
 //			PCL_INFO ("Total compression percentage: %f%%\n", (bytes_per_XYZ + bytes_per_intensity) / (3.0f * sizeof (float)) * 100.0f);
 //			PCL_INFO ("Compression ratio: %f\n\n", static_cast<float> (3.0f * sizeof (float)) / static_cast<float> (bytes_per_XYZ + bytes_per_intensity));
 
-			logStream << point_count_ << "\t" << bytes_per_XYZ / (3.0f * sizeof (float)) * 100.0f << "\t";
+      logStream << point_count_ << "\t" << bytes_per_XYZ / (4.0f * sizeof (float)) * 100.0f << "\t";
 			logStream << bytes_per_XYZ << "\t" << bytes_per_intensity << "\t";
-			logStream << static_cast<float> ((point_count_) * (3.0f * sizeof (float))) / 1024.0f << "\t";
+      logStream << static_cast<float> ((point_count_) * (4.0f * sizeof (float))) / 1024.0f << "\t";
 			logStream << static_cast<float> (compressed_point_data_len_ + compressed_intensity_data_len_) / 1024.0f << "\t";
-			logStream << bytes_per_XYZ + bytes_per_intensity << "\t" << (bytes_per_XYZ + bytes_per_intensity) / (3.0f * sizeof (float)) * 100.0f << "\t";
-			logStream << static_cast<float> (3.0f * sizeof (float)) / static_cast<float> (bytes_per_XYZ + bytes_per_intensity);
+      logStream << bytes_per_XYZ + bytes_per_intensity << "\t" << (bytes_per_XYZ + bytes_per_intensity) / (4.0f * sizeof (float)) * 100.0f << "\t";
+      logStream << static_cast<float> (4.0f * sizeof (float)) / static_cast<float> (bytes_per_XYZ + bytes_per_intensity);
 			logStream << std::endl;
 
 		}
