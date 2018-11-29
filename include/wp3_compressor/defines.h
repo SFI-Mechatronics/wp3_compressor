@@ -17,7 +17,7 @@
 #define _VELODYNEFRAME "velodyne"
 #define _VELODYNEPOINTS "/velodyne_points"
 
-#define _TOPICOUT "/wp3/pc2_compressed"
+#define _TOPICOUT "/wp3/"
 
 // Compression defines
 #define _STATISTICS false
