@@ -10,63 +10,102 @@
 namespace wp3 {
 
 // Constructor
-CloudCompressor::CloudCompressor(std::string outputMsgTopic, std::string inputCloudTopic, std::string rosTFLocalFrame, std::string rosTFGlobalFrame,
-		double octreeResolution, unsigned int iFrameRate, Eigen::Vector4f minPT, Eigen::Vector4f maxPT, bool showStatistics) :
-										 transformedCloud_(new PointCloud()),
-										 croppedCloud_(new PointCloud ()),
-										 octreeResolution_(octreeResolution),
-										 rosTFLocalFrame_(rosTFLocalFrame),
-										 rosTFGlobalFrame_(rosTFGlobalFrame),
-										 showStatistics_(showStatistics),
-										 logFile_("/home/nvidia/compressorlog.txt"),
-										 pointCloudEncoder_(showStatistics, octreeResolution, minPT[0], minPT[1], minPT[2], maxPT[0], maxPT[1], maxPT[2], iFrameRate)
+CloudCompressor::CloudCompressor(std::string outputMsgTopic, std::string globalFrame, std::string kinectFrame, std::string velodyneFrame,
+    double octreeResolution, unsigned int iFrameRate, Eigen::Vector4f minPT, Eigen::Vector4f maxPT, bool showStatistics) :
+                     transformedCloud(new PointCloud()),
+                     croppedCloud(new PointCloud ()),
+                     octreeResolution(octreeResolution),
+                     globalFrame(globalFrame),
+                     kinectFrame(kinectFrame),
+                     velodyneFrame(velodyneFrame),
+                     showStatistics(showStatistics),
+                     logFile("/home/nvidia/compressorlog.txt"),
+                     pointCloudEncoder(showStatistics, octreeResolution, minPT[0], minPT[1], minPT[2], maxPT[0], maxPT[1], maxPT[2], iFrameRate)
 {
-	if(showStatistics_){
-		logStream_.open(logFile_.c_str());
-		logStream_ << "Opoints\tOsize\tCpoint\tCsize\tTime" << std::endl;
+  if(showStatistics){
+    logStream.open(logFile.c_str());
+    logStream << "Opoints\tOsize\tCpoint\tCsize\tTime" << std::endl;
 	}
 
 	// Setup box crop filter
 
-	crop_.setMin(minPT);
-	crop_.setMax(maxPT);
+  crop.setMin(minPT);
+  crop.setMax(maxPT);
 
-	sub_ = nh_.subscribe<PointCloud>(inputCloudTopic, 1, &wp3::CloudCompressor::roscallback, this);
-	pub_ = nh_.advertise<std_msgs::String>(outputMsgTopic, 1);
+  pub = nh.advertise<std_msgs::String>(outputMsgTopic, 1);
 }
 
 CloudCompressor::~CloudCompressor(){
-	if(showStatistics_)
-		logStream_.close();
+  if(showStatistics)
+    logStream.close();
 }
 
+void CloudCompressor::setKinectTF(const tf::StampedTransform &value)
+{
+  kinectTF = value;
+}
+
+void CloudCompressor::setVelodyneTF(const tf::StampedTransform &value)
+{
+  velodyneTF = value;
+}
+
+std::string CloudCompressor::getGlobalFrame() const
+{
+  return globalFrame;
+}
+
+std::string CloudCompressor::getKinectFrame() const
+{
+  return kinectFrame;
+}
+
+std::string CloudCompressor::getVelodyneFrame() const
+{
+  return velodyneFrame;
+}
+
+void CloudCompressor::setKinectCloud(const PointCloud &value)
+{
+  kinectCloud = value;
+}
+
+void CloudCompressor::setVelodyneCloud(const PointCloud &value)
+{
+  velodyneCloud = value;
+}
+
+void CloudCompressor::setKinectCloudPC2(const sensor_msgs::PointCloud2ConstPtr &value)
+{
+  pcl::fromROSMsg(*value,kinectCloud);
+}
+
+void CloudCompressor::setVelodyneCloudPC2(const sensor_msgs::PointCloud2ConstPtr &value)
+{
+  pcl::fromROSMsg(*value,velodyneCloud);
+}
+
+
 // Callback for ROS subscriber
-void CloudCompressor::roscallback(const PointCloud::ConstPtr &cloud){
+void CloudCompressor::Publish(){
 
-	// Get transformation published by master
-	tf::StampedTransform transform;
-	try{
-		tfListener_.lookupTransform(rosTFGlobalFrame_, rosTFLocalFrame_, ros::Time(0), transform);
-	}
-	catch (tf::TransformException &ex) {
-		ROS_ERROR("%s",ex.what());
-		return;
-	}
+  time_t start = clock();
 
-	time_t start = clock();
+  // Transform the point cloud
+  pcl_ros::transformPointCloud(kinectCloud, kinectCloud, kinectTF);
+  pcl_ros::transformPointCloud(velodyneCloud, velodyneCloud, velodyneTF);
 
-	// Transform the point cloud
-	pcl_ros::transformPointCloud(*cloud, *transformedCloud_, transform);
+  *transformedCloud = kinectCloud + velodyneCloud;
 
 	// Crop the point cloud
-	crop_.setInputCloud(transformedCloud_);
-	crop_.filter(*croppedCloud_);
+  crop.setInputCloud(transformedCloud);
+  crop.filter(*croppedCloud);
 
 	// Stream for storing serialized compressed point cloud
 	std::stringstream compressedData;
 
 	// Encode point cloud to stream
-	pointCloudEncoder_.encodePointCloud (croppedCloud_, compressedData);
+  pointCloudEncoder.encodePointCloud (croppedCloud, compressedData);
 
 	clock_t end = clock();
 	double time = (double) (end-start) / CLOCKS_PER_SEC * 1000.0;
@@ -74,12 +113,12 @@ void CloudCompressor::roscallback(const PointCloud::ConstPtr &cloud){
 	// Publish the encoded stream
 	std_msgs::String msg;
 	msg.data = compressedData.str();
-	pub_.publish(msg);
+  pub.publish(msg);
 
-	if (showStatistics_)
+  if (showStatistics)
 	{
-		float input_size = static_cast<float> (cloud->size());
-		float cropped_size = static_cast<float> (croppedCloud_->size());
+    float input_size = static_cast<float> (kinectCloud.size() + velodyneCloud.size());
+    float cropped_size = static_cast<float> (croppedCloud->size());
 
 		//				PCL_INFO ("*** POINTCLOUD FILTERING ***\n");
 		//
@@ -88,9 +127,9 @@ void CloudCompressor::roscallback(const PointCloud::ConstPtr &cloud){
 		//				PCL_INFO ("Number of points in cropped cloud: %.0f\n", cropped_size);
 		//				PCL_INFO ("Size cropped point cloud: %f kBytes\n\n", static_cast<float> ((cropped_size) * (3.0f * sizeof (float))) / 1024.0f);
 
-    logStream_ << input_size << "\t" << static_cast<float> ((input_size) * (4.0f * sizeof (float))) / 1024.0f << "\t";
-    logStream_ << cropped_size << "\t" << static_cast<float> ((cropped_size) * (4.0f * sizeof (float))) / 1024.0f << "\t";
-		logStream_ << time << std::endl;
+    logStream << input_size << "\t" << static_cast<float> ((input_size) * (4.0f * sizeof (float))) / 1024.0f << "\t";
+    logStream << cropped_size << "\t" << static_cast<float> ((cropped_size) * (4.0f * sizeof (float))) / 1024.0f << "\t";
+    logStream << time << std::endl;
 	}
 
 

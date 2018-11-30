@@ -18,11 +18,11 @@
         args="0 -0.1 0 0 -1.570796 1.570796 jetson6_ir_optical_frame2 velodyne 100"/>
 
 <!-- ================= Compressor ======================= -->
-    <node pkg="wp3_compressor" type="wp3_compressor_node" name="jetson6_compressor">
+<!--    <node pkg="wp3_compressor" type="wp3_compressor_node" name="jetson6_compressor">
         <param name="sensor_name" value="jetson6" />
         <param name="resolution" value="0.04" />
         <param name="sensor_type" value="1" />
     </node>   
-
+-->
 </launch>
 

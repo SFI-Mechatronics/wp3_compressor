@@ -20,6 +20,10 @@
 #include <std_msgs/String.h>
 #include <tf/transform_listener.h>
 
+#include <message_filters/subscriber.h>
+#include <message_filters/synchronizer.h>
+#include <message_filters/sync_policies/approximate_time.h>
+
 #include <Eigen/Eigen>
 
 #include <pcl_ros/point_cloud.h>
@@ -42,43 +46,66 @@ class CloudCompressor
 {
 public:
 	// Constructor
-	CloudCompressor(std::string outputMsgTopic, std::string inputCloudTopic, std::string rosTFLocalFrame, std::string rosTFGlobalFrame,
+  CloudCompressor(std::string outputMsgTopic, std::string globalFrame, std::string kinectFrame, std::string velodyneFrame,
 			double octreeResolution, unsigned int iFrameRate, Eigen::Vector4f minPT, Eigen::Vector4f maxPT, bool showStatistics);
 
 	// Deconstrucor
 	~CloudCompressor();
 
-	// Callback for PointCloudXYZ subscriber
-	void roscallback(const PointCloud::ConstPtr &cloud);
+  // Process and publish compressed cloud.
+  void Publish();
+
+
+  void setKinectTF(const tf::StampedTransform &value);
+  void setVelodyneTF(const tf::StampedTransform &value);
+
+  std::string getGlobalFrame() const;
+
+  std::string getKinectFrame() const;
+
+  std::string getVelodyneFrame() const;
+
+  void setKinectCloud(const PointCloud &value);
+
+  void setVelodyneCloud(const PointCloud &value);
+
+  void setKinectCloudPC2(const sensor_msgs::PointCloud2ConstPtr &value);
+
+  void setVelodyneCloudPC2(const sensor_msgs::PointCloud2ConstPtr &value);
+
 
 private:
 
-	// ROS variables
-	std::string rosTFGlobalFrame_;
-	std::string rosTFLocalFrame_;
+  // ROS variables
+  std::string globalFrame;
+  std::string kinectFrame;
+  std::string velodyneFrame;
 
-	ros::NodeHandle nh_;
-	ros::Subscriber sub_;
-	ros::Publisher pub_;
+  ros::NodeHandle nh;
+  ros::Publisher pub;
 
-	tf::TransformListener tfListener_;
+  tf::StampedTransform kinectTF;
+  tf::StampedTransform velodyneTF;
+
+  PointCloud kinectCloud;
+  PointCloud velodyneCloud;
 
 	// Pointers to temporary point clouds
-	PointCloud::Ptr transformedCloud_;
-	PointCloud::Ptr croppedCloud_;
+  PointCloud::Ptr transformedCloud;
+  PointCloud::Ptr croppedCloud;
 
 	// Compression setup
-	double octreeResolution_;
+  double octreeResolution;
 
-	Compressor pointCloudEncoder_;
+  Compressor pointCloudEncoder;
 
 	// Box crop filter
-	pcl::CropBox<PointType> crop_;
+  pcl::CropBox<PointType> crop;
 
 	// Logging
-	bool showStatistics_;
-	std::string logFile_;
-	std::ofstream logStream_;
+  bool showStatistics;
+  std::string logFile;
+  std::ofstream logStream;
 };
 
 }
