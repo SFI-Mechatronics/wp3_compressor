@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 
     switch(sensorType) {
     case 0: // Kinect
-      std::cout << "Starting node using KINECT V2" << std::endl;
+      ROS_INFO("Starting node using KINECT V2");
       outputTopic = "/" + sensorName + _TOPICOUT + "kinect_comp";
       inputTopic = "/" + sensorName + _KINECTPOINTS;
       localFrame = sensorName + _KINECTFRAME;
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
       break;
 
     case 1: // Velodyne
-      std::cout << "Starting node using VELODYNE" << std::endl;
+      ROS_INFO("Starting node using VELODYNE");
       outputTopic = "/" + sensorName + _TOPICOUT + "velodyne_comp";
       inputTopic = "/velodyne_points";
       localFrame = "velodyne";
