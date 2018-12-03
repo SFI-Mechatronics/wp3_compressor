@@ -24,13 +24,13 @@ void killHandler(int)
 }
 
 // Callback for ROS subscriber
-void roscallback(const sensor_msgs::PointCloud2ConstPtr &cloud1, const sensor_msgs::PointCloud2ConstPtr &cloud2, wp3::CloudCompressor * compressor){
-  tf::TransformListener tfListener;
+void roscallback(const sensor_msgs::PointCloud2ConstPtr &cloud1, const sensor_msgs::PointCloud2ConstPtr &cloud2,
+                 wp3::CloudCompressor * compressor, tf::TransformListener * tfListener){
 
   // Get transformations published by master
   tf::StampedTransform transform1;
   try{
-    tfListener.lookupTransform(compressor->getGlobalFrame(), compressor->getKinectFrame(), ros::Time(0), transform1);
+    tfListener->lookupTransform(compressor->getGlobalFrame(), compressor->getKinectFrame(), ros::Time(0), transform1);
   }
   catch (tf::TransformException &ex) {
     ROS_ERROR("Kinect TF: %s",ex.what());
@@ -40,7 +40,7 @@ void roscallback(const sensor_msgs::PointCloud2ConstPtr &cloud1, const sensor_ms
 
   tf::StampedTransform transform2;
   try{
-    tfListener.lookupTransform(compressor->getGlobalFrame(), compressor->getVelodyneFrame(), ros::Time(0), transform2);
+    tfListener->lookupTransform(compressor->getGlobalFrame(), compressor->getVelodyneFrame(), ros::Time(0), transform2);
   }
   catch (tf::TransformException &ex) {
     ROS_ERROR("Velodyne TF: %s",ex.what());
@@ -50,6 +50,7 @@ void roscallback(const sensor_msgs::PointCloud2ConstPtr &cloud1, const sensor_ms
 
   compressor->setKinectCloudPC2(cloud1);
   compressor->setVelodyneCloudPC2(cloud2);
+  compressor->setDataReceived(true);
 }
 
 int main(int argc, char **argv)
@@ -111,6 +112,7 @@ int main(int argc, char **argv)
     maxPT << _MAXX, _MAXY, _MAXZ, 1;
 
     wp3::CloudCompressor compressor(outputTopic, globalFrame, kinectFrame, velodyneFrame, resolution, _IFRAMERATE, minPT, maxPT, _STATISTICS);
+    tf::TransformListener tfListener;
 
     message_filters::Subscriber<sensor_msgs::PointCloud2> kinect_sub(nh, kinectTopic, 1);
     message_filters::Subscriber<sensor_msgs::PointCloud2> velodyne_sub(nh, velodyneTopic, 1);
@@ -121,7 +123,7 @@ int main(int argc, char **argv)
     sync.setInterMessageLowerBound(0,ros::Duration(loopRate));
     sync.setInterMessageLowerBound(1,ros::Duration(loopRate));
 
-    sync.registerCallback(boost::bind(&roscallback, _1, _2, &compressor));
+    sync.registerCallback(boost::bind(&roscallback, _1, _2, &compressor, &tfListener));
 
 
     while(ros::ok()){

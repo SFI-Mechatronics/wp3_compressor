@@ -73,6 +73,7 @@ public:
 
   void setVelodyneCloudPC2(const sensor_msgs::PointCloud2ConstPtr &value);
 
+  void setDataReceived(bool value);
 
 private:
 
@@ -101,6 +102,8 @@ private:
 
 	// Box crop filter
   pcl::CropBox<PointType> crop;
+
+  bool dataReceived;
 
 	// Logging
   bool showStatistics;
