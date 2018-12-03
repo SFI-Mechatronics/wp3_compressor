@@ -12,7 +12,7 @@
 #define _ROSRATE 60
 #define _DEFAULTNODENAME "compress_pc"
 #define _GLOBALFRAME "world"
-#define _KINECTFRAME "_ir_optical_frame"
+#define _KINECTFRAME "_ir_optical_frame2"
 #define _KINECTPOINTS "/sd/points_nocolor"
 #define _VELODYNEFRAME "velodyne"
 #define _VELODYNEPOINTS "/velodyne_points"

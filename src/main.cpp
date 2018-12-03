@@ -33,7 +33,7 @@ void roscallback(const sensor_msgs::PointCloud2ConstPtr &cloud1, const sensor_ms
     tfListener.lookupTransform(compressor->getGlobalFrame(), compressor->getKinectFrame(), ros::Time(0), transform1);
   }
   catch (tf::TransformException &ex) {
-    ROS_ERROR("%s",ex.what());
+    ROS_ERROR("Kinect TF: %s",ex.what());
     return;
   }
   compressor->setKinectTF(transform1);
@@ -43,7 +43,7 @@ void roscallback(const sensor_msgs::PointCloud2ConstPtr &cloud1, const sensor_ms
     tfListener.lookupTransform(compressor->getGlobalFrame(), compressor->getVelodyneFrame(), ros::Time(0), transform2);
   }
   catch (tf::TransformException &ex) {
-    ROS_ERROR("%s",ex.what());
+    ROS_ERROR("Velodyne TF: %s",ex.what());
     return;
   }
   compressor->setVelodyneTF(transform2);
