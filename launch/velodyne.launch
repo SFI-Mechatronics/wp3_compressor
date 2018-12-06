@@ -6,8 +6,11 @@
 <!-- 140 deg  2.44346 rad -->
 
 <!-- ================= Kinect ======================= -->
-    <node pkg="tf" type="static_transform_publisher" name="jetson6_ir_optical_frame"
+    <node pkg="tf" type="static_transform_publisher" name="jetson6_ir_optical_frame2"
         args="0.65 8.9 4.2 -2.11 0.0 -2.44 world jetson6_ir_optical_frame2 100"/>
+
+    <node pkg="tf" type="static_transform_publisher" name="jetson6_ir_optical_frame"
+        args="0.65 8.9 4.2 -2.11 0.0 -2.44 world jetson6_ir_optical_frame 100"/>
 	
 <!-- ================= Velodyne VLP-16 ======================= -->
     <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch">

@@ -29,7 +29,7 @@
 #define _MINY 0.0
 #define _MINZ 0.0
 #define _MAXX 10.0
-#define _MAXY 14.0
+#define _MAXY 10.0
 #define _MAXZ 4.0
 
 //#define _MINI 2.0
