@@ -34,16 +34,20 @@
 #include "octree_compression.h"
 
 // Typedefs
-typedef pcl::PointXYZ PointType;
-typedef pcl::PointCloud<PointType> PointCloud;
+//typedef pcl::PointXYZ PointType;
+//typedef pcl::PointCloud<PointType> PointCloud;
 
-typedef wp3::PointCloudCompression Compressor;
+
 
 
 namespace wp3 {
 
+template <typename PointT>
 class CloudCompressor
 {
+  typedef typename pcl::PointCloud<PointT> PointCloud;
+  typedef typename wp3::PointCloudCompression<PointT> Compressor;
+
 public:
 	// Constructor
   CloudCompressor(std::string outputMsgTopic, std::string globalFrame, std::string kinectFrame, std::string velodyneFrame,
@@ -92,8 +96,8 @@ private:
   PointCloud velodyneCloud;
 
 	// Pointers to temporary point clouds
-  PointCloud::Ptr transformedCloud;
-  PointCloud::Ptr croppedCloud;
+  typename PointCloud::Ptr transformedCloud;
+  typename PointCloud::Ptr croppedCloud;
 
 	// Compression setup
   double octreeResolution;
@@ -101,7 +105,7 @@ private:
   Compressor pointCloudEncoder;
 
 	// Box crop filter
-  pcl::CropBox<PointType> crop;
+  pcl::CropBox<PointT> crop;
 
   bool dataReceived;
 

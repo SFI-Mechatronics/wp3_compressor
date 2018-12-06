@@ -9,7 +9,8 @@
 
 namespace wp3 {
 
-void PointCloudCompression::encodePointCloud (const PointCloudConstPtr &cloud_arg, std::ostream& compressed_tree_data_out_arg){
+template <typename PointT>
+void PointCloudCompression<PointT>::encodePointCloud (const PointCloudConstPtr &cloud_arg, std::ostream& compressed_tree_data_out_arg){
 
 	// initialize octree
 	this->setInputCloud (cloud_arg);
@@ -109,8 +110,8 @@ void PointCloudCompression::encodePointCloud (const PointCloudConstPtr &cloud_ar
 
 } // End encodePointCloud()
 
-
-void PointCloudCompression::writeFrameHeader (std::ostream& compressed_tree_data_out_arg)
+template <typename PointT>
+void PointCloudCompression<PointT>::writeFrameHeader (std::ostream& compressed_tree_data_out_arg)
 {
 	// encode header identifier
 	compressed_tree_data_out_arg.write (reinterpret_cast<const char*> (frame_header_identifier_), strlen (frame_header_identifier_));
@@ -143,8 +144,8 @@ void PointCloudCompression::writeFrameHeader (std::ostream& compressed_tree_data
 	}
 } // End writeFrameHeader()
 
-
-void PointCloudCompression::entropyEncoding(std::ostream& compressed_tree_data_out_arg)
+template <typename PointT>
+void PointCloudCompression<PointT>::entropyEncoding(std::ostream& compressed_tree_data_out_arg)
 {
 	uint64_t binary_tree_data_vector_size;
 	uint64_t point_intensity_data_vector_size;
@@ -167,8 +168,8 @@ void PointCloudCompression::entropyEncoding(std::ostream& compressed_tree_data_o
 
 } // End entropyEncoding()
 
-
-void PointCloudCompression::serializeTreeCallback (LeafT &leaf_arg, const OctreeKey & key_arg)
+template <typename PointT>
+void PointCloudCompression<PointT>::serializeTreeCallback (LeafT &leaf_arg, const OctreeKey & key_arg)
 {
 	// reference to point indices vector stored within octree leaf
 	const unsigned int density = leaf_arg.getPointCounter();
@@ -181,5 +182,6 @@ void PointCloudCompression::serializeTreeCallback (LeafT &leaf_arg, const Octree
 
 } // End serializeTreeCallback
 
-
+  template class PointCloudCompression<pcl::PointXYZ>;
+  template class PointCloudCompression<pcl::PointXYZI>;
 } // End namespace wp3

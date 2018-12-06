@@ -10,7 +10,8 @@
 namespace wp3 {
 
 // Constructor
-CloudCompressor::CloudCompressor(std::string outputMsgTopic, std::string globalFrame, std::string kinectFrame, std::string velodyneFrame,
+template <typename PointT>
+CloudCompressor<PointT>::CloudCompressor(std::string outputMsgTopic, std::string globalFrame, std::string kinectFrame, std::string velodyneFrame,
                                  double octreeResolution, unsigned int iFrameRate, Eigen::Vector4f minPT, Eigen::Vector4f maxPT, bool showStatistics) :
   transformedCloud(new PointCloud()),
   croppedCloud(new PointCloud ()),
@@ -36,64 +37,76 @@ CloudCompressor::CloudCompressor(std::string outputMsgTopic, std::string globalF
   pub = nh.advertise<std_msgs::String>(outputMsgTopic, 1);
 }
 
-CloudCompressor::~CloudCompressor(){
+template <typename PointT>
+CloudCompressor<PointT>::~CloudCompressor(){
   if(showStatistics)
     logStream.close();
 }
 
-void CloudCompressor::setKinectTF(const tf::StampedTransform &value)
+template <typename PointT>
+void CloudCompressor<PointT>::setKinectTF(const tf::StampedTransform &value)
 {
   kinectTF = value;
 }
 
-void CloudCompressor::setVelodyneTF(const tf::StampedTransform &value)
+template <typename PointT>
+void CloudCompressor<PointT>::setVelodyneTF(const tf::StampedTransform &value)
 {
   velodyneTF = value;
 }
 
-std::string CloudCompressor::getGlobalFrame() const
+template <typename PointT>
+std::string CloudCompressor<PointT>::getGlobalFrame() const
 {
   return globalFrame;
 }
 
-std::string CloudCompressor::getKinectFrame() const
+template <typename PointT>
+std::string CloudCompressor<PointT>::getKinectFrame() const
 {
   return kinectFrame;
 }
 
-std::string CloudCompressor::getVelodyneFrame() const
+template <typename PointT>
+std::string CloudCompressor<PointT>::getVelodyneFrame() const
 {
   return velodyneFrame;
 }
 
-void CloudCompressor::setKinectCloud(const PointCloud &value)
+template <typename PointT>
+void CloudCompressor<PointT>::setKinectCloud(const PointCloud &value)
 {
   kinectCloud = value;
 }
 
-void CloudCompressor::setVelodyneCloud(const PointCloud &value)
+template <typename PointT>
+void CloudCompressor<PointT>::setVelodyneCloud(const PointCloud &value)
 {
   velodyneCloud = value;
 }
 
-void CloudCompressor::setKinectCloudPC2(const sensor_msgs::PointCloud2ConstPtr &value)
+template <typename PointT>
+void CloudCompressor<PointT>::setKinectCloudPC2(const sensor_msgs::PointCloud2ConstPtr &value)
 {
   pcl::fromROSMsg(*value,kinectCloud);
 }
 
-void CloudCompressor::setVelodyneCloudPC2(const sensor_msgs::PointCloud2ConstPtr &value)
+template <typename PointT>
+void CloudCompressor<PointT>::setVelodyneCloudPC2(const sensor_msgs::PointCloud2ConstPtr &value)
 {
   pcl::fromROSMsg(*value,velodyneCloud);
 }
 
-void CloudCompressor::setDataReceived(bool value)
+template <typename PointT>
+void CloudCompressor<PointT>::setDataReceived(bool value)
 {
   dataReceived = value;
 }
 
 
 // Callback for ROS subscriber
-void CloudCompressor::Publish(){
+template <typename PointT>
+void CloudCompressor<PointT>::Publish(){
 
   if(dataReceived){
     dataReceived = false;
@@ -143,6 +156,7 @@ void CloudCompressor::Publish(){
   }
 
 }
-
+  template class CloudCompressor<pcl::PointXYZ>;
+  template class CloudCompressor<pcl::PointXYZI>;
 
 }

@@ -25,7 +25,7 @@ void killHandler(int)
 
 // Callback for ROS subscriber
 void roscallback(const sensor_msgs::PointCloud2ConstPtr &cloud1, const sensor_msgs::PointCloud2ConstPtr &cloud2,
-                 wp3::CloudCompressor * compressor, tf::TransformListener * tfListener){
+                 wp3::CloudCompressor<pcl::PointXYZ> * compressor, tf::TransformListener * tfListener){
 
   // Get transformations published by master
   tf::StampedTransform transform1;
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
     minPT << _MINX, _MINY, _MINZ, 1;
     maxPT << _MAXX, _MAXY, _MAXZ, 1;
 
-    wp3::CloudCompressor compressor(outputTopic, globalFrame, kinectFrame, velodyneFrame, resolution, _IFRAMERATE, minPT, maxPT, _STATISTICS);
+    wp3::CloudCompressor<pcl::PointXYZ> compressor(outputTopic, globalFrame, kinectFrame, velodyneFrame, resolution, _IFRAMERATE, minPT, maxPT, _STATISTICS);
     tf::TransformListener tfListener;
 
     message_filters::Subscriber<sensor_msgs::PointCloud2> kinect_sub(nh, kinectTopic, 1);

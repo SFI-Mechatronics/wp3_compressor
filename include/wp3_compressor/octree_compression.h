@@ -32,18 +32,15 @@ using namespace pcl::octree;
 
 namespace wp3 {
 
-typedef pcl::PointXYZ PointT_comp;
-typedef OctreePointCloudDensityContainer LeafT_comp;
-typedef OctreeContainerEmpty BranchT_comp;
-typedef Octree2BufBase<LeafT_comp, BranchT_comp> OctreeT_comp;
+// typedef pcl::PointXYZ PointT;
+typedef OctreePointCloudDensityContainer LeafT;
+typedef OctreeContainerEmpty BranchT;
+typedef Octree2BufBase<LeafT, BranchT> OctreeT;
 
-class PointCloudCompression : public OctreePointCloud<PointT_comp, LeafT_comp, BranchT_comp, OctreeT_comp>
+template <typename PointT>
+class PointCloudCompression : public OctreePointCloud<PointT, LeafT, BranchT, OctreeT>
 {
 public:
-	typedef PointT_comp PointT;
-	typedef LeafT_comp LeafT;
-	typedef BranchT_comp BranchT;
-	typedef OctreeT_comp OctreeT;
 
 	typedef typename OctreePointCloud<PointT, LeafT, BranchT, OctreeT>::PointCloud PointCloud;
 	typedef typename OctreePointCloud<PointT, LeafT, BranchT, OctreeT>::PointCloudPtr PointCloudPtr;
