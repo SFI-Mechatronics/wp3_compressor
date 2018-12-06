@@ -24,32 +24,21 @@ void killHandler(int)
 }
 
 // Callback for ROS subscriber
-void roscallback(const sensor_msgs::PointCloud2ConstPtr &cloud1, const sensor_msgs::PointCloud2ConstPtr &cloud2,
-                 wp3::CloudCompressor<pcl::PointXYZ> * compressor, tf::TransformListener * tfListener){
+void roscallback(const sensor_msgs::PointCloud2ConstPtr &cloud, wp3::CloudCompressor<pcl::PointXYZ> * compressor,
+                 tf::TransformListener * tfListener){
 
-  // Get transformations published by master
-  tf::StampedTransform transform1;
+  // Get transformation published by master
+  tf::StampedTransform transform;
   try{
-    tfListener->lookupTransform(compressor->getGlobalFrame(), compressor->getKinectFrame(), ros::Time(0), transform1);
+    tfListener->lookupTransform(compressor->getGlobalFrame(), compressor->getLocalFrame(), ros::Time(0), transform);
   }
   catch (tf::TransformException &ex) {
-    ROS_ERROR("Kinect TF: %s",ex.what());
+    ROS_ERROR("Local TF: %s",ex.what());
     return;
   }
-  compressor->setKinectTF(transform1);
 
-  tf::StampedTransform transform2;
-  try{
-    tfListener->lookupTransform(compressor->getGlobalFrame(), compressor->getVelodyneFrame(), ros::Time(0), transform2);
-  }
-  catch (tf::TransformException &ex) {
-    ROS_ERROR("Velodyne TF: %s",ex.what());
-    return;
-  }
-  compressor->setVelodyneTF(transform2);
-
-  compressor->setKinectCloudPC2(cloud1);
-  compressor->setVelodyneCloudPC2(cloud2);
+  compressor->setTransform(transform);
+  compressor->setInputCloud(cloud);
   compressor->setDataReceived(true);
 }
 
@@ -64,45 +53,56 @@ int main(int argc, char **argv)
 
   ros::Rate loopRate(_ROSRATE);
 
-
   if(!nh.hasParam("sensor_name"))
-    ROS_ERROR("%s","Missing _sensor_name:=<name> parameter! Shutting down...");
+    ROS_ERROR("%s","Missing _base_name:=<name> parameter! Shutting down...");
   else if(!nh.hasParam("resolution"))
     ROS_ERROR("%s","Missing _resolution:=<resolution> parameter! Shutting down...");
-//  else if(!nh.hasParam("sensor_type"))
-//    ROS_ERROR("%s","Missing _sensor_type:=<0: Kinect, 1: Velodyne> parameter! Shutting down...");
+  else if(!nh.hasParam("input_topic"))
+    ROS_ERROR("%s","Missing _input_topic parameter! Shutting down...");
+  else if(!nh.hasParam("input_type"))
+    ROS_ERROR("%s","Missing _input_type:=<0 = XYZ, 1 = XYZI, 2 = XYXRGB> parameter! Shutting down...");
+  else if(!nh.hasParam("output_topic"))
+    ROS_ERROR("%s","Missing _output_topic parameter! Shutting down...");
+  else if(!nh.hasParam("local_frame"))
+    ROS_ERROR("%s","Missing _local_frame parameter! Shutting down...");
+  else if(!nh.hasParam("global_frame"))
+    ROS_ERROR("%s","Missing _global_frame parameter! Shutting down...");
   else {
 
     std::string outputTopic;
-    std::string kinectTopic, velodyneTopic;
-    std::string kinectFrame, velodyneFrame;
+    std::string inputTopic;
+    int inputType;
+    std::string localFrame;
     std::string globalFrame;
-
-    std::string sensorName;
+    std::string baseName;
     double resolution;
-//    int sensorType;
-    nh.getParam("sensor_name", sensorName);
+
+    nh.getParam("sensor_name", baseName);
     nh.getParam("resolution", resolution);
-//    nh.getParam("sensor_type", sensorType);
+    nh.getParam("input_topic", inputTopic);
+    nh.getParam("input_type", inputType);
+    nh.getParam("output_topic", outputTopic);
+    nh.getParam("local_frame", localFrame);
+    nh.getParam("global_frame", globalFrame);
 
-      ROS_INFO("Starting node using KINECT V2 and VELODYNE");
-      outputTopic = "/" + sensorName + _TOPICOUT + "kinect_comp";
-      kinectTopic = "/" + sensorName + _KINECTPOINTS;
-      velodyneTopic = "/velodyne_points";
+    ROS_INFO("Starting node with input " + inputTopic);
+    //      inputTopic = "/" + baseName + "/" + inputTopic;
+    //      outputTopic = "/" + basseName + _KINECTPOINTS;
+    //      velodyneTopic = "/velodyne_points";
 
-      kinectFrame = sensorName + _KINECTFRAME;
-      velodyneFrame = "velodyne";
-      globalFrame = _GLOBALFRAME;
+    //      kinectFrame = sensorName + _KINECTFRAME;
+    //      velodyneFrame = "velodyne";
+    //      globalFrame = _GLOBALFRAME;
 
-//    case 1: // Velodyne
-//      ROS_INFO("Starting node using VELODYNE");
-//      outputTopic = "/" + sensorName + _TOPICOUT + "velodyne_comp";
-//      inputTopic = "/velodyne_points";
-//      localFrame = "velodyne";
-//      globalFrame = _GLOBALFRAME;
-//      break;
+    //    case 1: // Velodyne
+    //      ROS_INFO("Starting node using VELODYNE");
+    //      outputTopic = "/" + sensorName + _TOPICOUT + "velodyne_comp";
+    //      inputTopic = "/velodyne_points";
+    //      localFrame = "velodyne";
+    //      globalFrame = _GLOBALFRAME;
+    //      break;
 
-//    } // End switch(sensorType)
+    //    } // End switch(sensorType)
 
 
     ros::Duration(1.0).sleep();
@@ -111,19 +111,22 @@ int main(int argc, char **argv)
     minPT << _MINX, _MINY, _MINZ, 1;
     maxPT << _MAXX, _MAXY, _MAXZ, 1;
 
-    wp3::CloudCompressor<pcl::PointXYZ> compressor(outputTopic, globalFrame, kinectFrame, velodyneFrame, resolution, _IFRAMERATE, minPT, maxPT, _STATISTICS);
+    wp3::CloudCompressor<pcl::PointXYZ> compressorXYZ(outputTopic, globalFrame, localFrame, resolution, _IFRAMERATE, minPT, maxPT, _STATISTICS);
+    wp3::CloudCompressor<pcl::PointXYZI> compressorXYZI(outputTopic, globalFrame, localFrame, resolution, _IFRAMERATE, minPT, maxPT, _STATISTICS);
+
     tf::TransformListener tfListener;
 
-    message_filters::Subscriber<sensor_msgs::PointCloud2> kinect_sub(nh, kinectTopic, 1);
-    message_filters::Subscriber<sensor_msgs::PointCloud2> velodyne_sub(nh, velodyneTopic, 1);
-
-    typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::PointCloud2, sensor_msgs::PointCloud2> SyncPolityT;
-
-    message_filters::Synchronizer<SyncPolityT> sync(SyncPolityT(4), kinect_sub, velodyne_sub);
-    sync.setInterMessageLowerBound(0,ros::Duration(loopRate));
-    sync.setInterMessageLowerBound(1,ros::Duration(loopRate));
-
-    sync.registerCallback(boost::bind(&roscallback, _1, _2, &compressor, &tfListener));
+    switch (inputType){
+    case 0:
+      sub = nh.subscribe<sensor_msgs::PointCloud2>(inputTopic, 1, boost::bind(&roscallback, _1, compressorXYZ, &tfListener));
+      break;
+    case 1:
+      sub = nh.subscribe<sensor_msgs::PointCloud2>(inputTopic, 1, boost::bind(&roscallback, _1, compressorXYZI, &tfListener));
+      break;
+    default:
+      ROS_ERROR("%s","Incorrect input_type used!");
+      break;
+    }
 
 
     while(ros::ok()){
@@ -132,7 +135,19 @@ int main(int argc, char **argv)
 #endif
 
       ros::spinOnce();
-      compressor.Publish();
+
+      switch (inputType){
+      case 0:
+        compressorXYZ.Publish();
+        break;
+      case 1:
+        compressorXYZI.Publish();
+        break;
+      default:
+        ROS_ERROR("%s","Incorrect input_type used!");
+        break;
+      }
+
 #if _STATISTICS
       clock_t end = clock();
       double time = (double) (end-start) / CLOCKS_PER_SEC * 1000.0;

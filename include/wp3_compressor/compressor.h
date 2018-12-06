@@ -50,8 +50,8 @@ class CloudCompressor
 
 public:
 	// Constructor
-  CloudCompressor(std::string outputMsgTopic, std::string globalFrame, std::string kinectFrame, std::string velodyneFrame,
-			double octreeResolution, unsigned int iFrameRate, Eigen::Vector4f minPT, Eigen::Vector4f maxPT, bool showStatistics);
+  CloudCompressor(std::string outputMsgTopic, std::string globalFrame, std::string localFrame, double octreeResolution,
+                  unsigned int iFrameRate, Eigen::Vector4f minPT, Eigen::Vector4f maxPT, bool showStatistics);
 
 	// Deconstrucor
 	~CloudCompressor();
@@ -59,23 +59,13 @@ public:
   // Process and publish compressed cloud.
   void Publish();
 
-
-  void setKinectTF(const tf::StampedTransform &value);
-  void setVelodyneTF(const tf::StampedTransform &value);
+  void setTransform(const tf::StampedTransform &value);
 
   std::string getGlobalFrame() const;
 
-  std::string getKinectFrame() const;
+  std::string getLocalFrame() const;
 
-  std::string getVelodyneFrame() const;
-
-  void setKinectCloud(const PointCloud &value);
-
-  void setVelodyneCloud(const PointCloud &value);
-
-  void setKinectCloudPC2(const sensor_msgs::PointCloud2ConstPtr &value);
-
-  void setVelodyneCloudPC2(const sensor_msgs::PointCloud2ConstPtr &value);
+  void setInputCloud(const sensor_msgs::PointCloud2ConstPtr &value);
 
   void setDataReceived(bool value);
 
@@ -83,17 +73,14 @@ private:
 
   // ROS variables
   std::string globalFrame;
-  std::string kinectFrame;
-  std::string velodyneFrame;
+  std::string localFrame;
 
   ros::NodeHandle nh;
   ros::Publisher pub;
 
-  tf::StampedTransform kinectTF;
-  tf::StampedTransform velodyneTF;
+  tf::StampedTransform transform;
 
-  PointCloud kinectCloud;
-  PointCloud velodyneCloud;
+  PointCloud inputCloud;
 
 	// Pointers to temporary point clouds
   typename PointCloud::Ptr transformedCloud;

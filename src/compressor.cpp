@@ -11,14 +11,13 @@ namespace wp3 {
 
 // Constructor
 template <typename PointT>
-CloudCompressor<PointT>::CloudCompressor(std::string outputMsgTopic, std::string globalFrame, std::string kinectFrame, std::string velodyneFrame,
-                                 double octreeResolution, unsigned int iFrameRate, Eigen::Vector4f minPT, Eigen::Vector4f maxPT, bool showStatistics) :
+CloudCompressor<PointT>::CloudCompressor(std::string outputMsgTopic, std::string globalFrame, std::string localFrame, double octreeResolution,
+                                         unsigned int iFrameRate, Eigen::Vector4f minPT, Eigen::Vector4f maxPT, bool showStatistics) :
   transformedCloud(new PointCloud()),
   croppedCloud(new PointCloud ()),
   octreeResolution(octreeResolution),
   globalFrame(globalFrame),
-  kinectFrame(kinectFrame),
-  velodyneFrame(velodyneFrame),
+  localFrame(localFrame),
   showStatistics(showStatistics),
   dataReceived(false),
   logFile("/home/nvidia/compressorlog.txt"),
@@ -44,15 +43,9 @@ CloudCompressor<PointT>::~CloudCompressor(){
 }
 
 template <typename PointT>
-void CloudCompressor<PointT>::setKinectTF(const tf::StampedTransform &value)
+void CloudCompressor<PointT>::setTransform(const tf::StampedTransform &value)
 {
-  kinectTF = value;
-}
-
-template <typename PointT>
-void CloudCompressor<PointT>::setVelodyneTF(const tf::StampedTransform &value)
-{
-  velodyneTF = value;
+  transform = value;
 }
 
 template <typename PointT>
@@ -62,39 +55,15 @@ std::string CloudCompressor<PointT>::getGlobalFrame() const
 }
 
 template <typename PointT>
-std::string CloudCompressor<PointT>::getKinectFrame() const
+std::string CloudCompressor<PointT>::getLocalFrame() const
 {
-  return kinectFrame;
+  return localFrame;
 }
 
 template <typename PointT>
-std::string CloudCompressor<PointT>::getVelodyneFrame() const
+void CloudCompressor<PointT>::setInputCloud(const sensor_msgs::PointCloud2ConstPtr &value)
 {
-  return velodyneFrame;
-}
-
-template <typename PointT>
-void CloudCompressor<PointT>::setKinectCloud(const PointCloud &value)
-{
-  kinectCloud = value;
-}
-
-template <typename PointT>
-void CloudCompressor<PointT>::setVelodyneCloud(const PointCloud &value)
-{
-  velodyneCloud = value;
-}
-
-template <typename PointT>
-void CloudCompressor<PointT>::setKinectCloudPC2(const sensor_msgs::PointCloud2ConstPtr &value)
-{
-  pcl::fromROSMsg(*value,kinectCloud);
-}
-
-template <typename PointT>
-void CloudCompressor<PointT>::setVelodyneCloudPC2(const sensor_msgs::PointCloud2ConstPtr &value)
-{
-  pcl::fromROSMsg(*value,velodyneCloud);
+  pcl::fromROSMsg(*value,inputCloud);
 }
 
 template <typename PointT>
@@ -114,10 +83,7 @@ void CloudCompressor<PointT>::Publish(){
     time_t start = clock();
 
     // Transform the point cloud
-    pcl_ros::transformPointCloud(kinectCloud, kinectCloud, kinectTF);
-    pcl_ros::transformPointCloud(velodyneCloud, velodyneCloud, velodyneTF);
-
-    *transformedCloud = kinectCloud + velodyneCloud;
+    pcl_ros::transformPointCloud(*transformedCloud, inputCloud, transform);
 
     // Crop the point cloud
     crop.setInputCloud(transformedCloud);
@@ -139,7 +105,7 @@ void CloudCompressor<PointT>::Publish(){
 
     if (showStatistics)
     {
-      float input_size = static_cast<float> (kinectCloud.size() + velodyneCloud.size());
+      float input_size = static_cast<float> (inputCloud.size());
       float cropped_size = static_cast<float> (croppedCloud->size());
 
       //				PCL_INFO ("*** POINTCLOUD FILTERING ***\n");
