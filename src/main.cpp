@@ -24,7 +24,25 @@ void killHandler(int)
 }
 
 // Callback for ROS subscriber
-void roscallback(const sensor_msgs::PointCloud2ConstPtr &cloud, wp3::CloudCompressor<pcl::PointXYZ> * compressor,
+void roscallbackXYZ(const sensor_msgs::PointCloud2ConstPtr &cloud, wp3::CloudCompressor<pcl::PointXYZ> * compressor,
+                 tf::TransformListener * tfListener){
+
+  // Get transformation published by master
+  tf::StampedTransform transform;
+  try{
+    tfListener->lookupTransform(compressor->getGlobalFrame(), compressor->getLocalFrame(), ros::Time(0), transform);
+  }
+  catch (tf::TransformException &ex) {
+    ROS_ERROR("Local TF: %s",ex.what());
+    return;
+  }
+
+  compressor->setTransform(transform);
+  compressor->setInputCloud(cloud);
+  compressor->setDataReceived(true);
+}
+
+void roscallbackXYZI(const sensor_msgs::PointCloud2ConstPtr &cloud, wp3::CloudCompressor<pcl::PointXYZI> * compressor,
                  tf::TransformListener * tfListener){
 
   // Get transformation published by master
@@ -53,9 +71,7 @@ int main(int argc, char **argv)
 
   ros::Rate loopRate(_ROSRATE);
 
-  if(!nh.hasParam("sensor_name"))
-    ROS_ERROR("%s","Missing _base_name:=<name> parameter! Shutting down...");
-  else if(!nh.hasParam("resolution"))
+  if(!nh.hasParam("resolution"))
     ROS_ERROR("%s","Missing _resolution:=<resolution> parameter! Shutting down...");
   else if(!nh.hasParam("input_topic"))
     ROS_ERROR("%s","Missing _input_topic parameter! Shutting down...");
@@ -74,10 +90,8 @@ int main(int argc, char **argv)
     int inputType;
     std::string localFrame;
     std::string globalFrame;
-    std::string baseName;
     double resolution;
 
-    nh.getParam("sensor_name", baseName);
     nh.getParam("resolution", resolution);
     nh.getParam("input_topic", inputTopic);
     nh.getParam("input_type", inputType);
@@ -85,7 +99,7 @@ int main(int argc, char **argv)
     nh.getParam("local_frame", localFrame);
     nh.getParam("global_frame", globalFrame);
 
-    ROS_INFO("Starting node with input " + inputTopic);
+    ROS_INFO("%s", "Starting node.");
     //      inputTopic = "/" + baseName + "/" + inputTopic;
     //      outputTopic = "/" + basseName + _KINECTPOINTS;
     //      velodyneTopic = "/velodyne_points";
@@ -115,13 +129,13 @@ int main(int argc, char **argv)
     wp3::CloudCompressor<pcl::PointXYZI> compressorXYZI(outputTopic, globalFrame, localFrame, resolution, _IFRAMERATE, minPT, maxPT, _STATISTICS);
 
     tf::TransformListener tfListener;
-
+    ros::Subscriber sub;
     switch (inputType){
     case 0:
-      sub = nh.subscribe<sensor_msgs::PointCloud2>(inputTopic, 1, boost::bind(&roscallback, _1, compressorXYZ, &tfListener));
+      sub = nh.subscribe<sensor_msgs::PointCloud2>(inputTopic, 1, boost::bind(&roscallbackXYZ, _1, &compressorXYZ, &tfListener));
       break;
     case 1:
-      sub = nh.subscribe<sensor_msgs::PointCloud2>(inputTopic, 1, boost::bind(&roscallback, _1, compressorXYZI, &tfListener));
+      sub = nh.subscribe<sensor_msgs::PointCloud2>(inputTopic, 1, boost::bind(&roscallbackXYZI, _1, &compressorXYZI, &tfListener));
       break;
     default:
       ROS_ERROR("%s","Incorrect input_type used!");

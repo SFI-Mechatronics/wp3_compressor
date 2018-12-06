@@ -9,8 +9,6 @@
     <node pkg="tf" type="static_transform_publisher" name="jetson6_ir_optical_frame2"
         args="0.65 8.9 4.2 -2.11 0.0 -2.44 world jetson6_ir_optical_frame2 100"/>
 
-    <node pkg="tf" type="static_transform_publisher" name="jetson6_ir_optical_frame"
-        args="0.65 8.9 4.2 -2.11 0.0 -2.44 world jetson6_ir_optical_frame 100"/>
 	
 <!-- ================= Velodyne VLP-16 ======================= -->
     <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch">
@@ -21,11 +19,14 @@
         args="0 -0.1 0 0 -1.570796 1.570796 jetson6_ir_optical_frame2 velodyne 100"/>
 
 <!-- ================= Compressor ======================= -->
-<!--    <node pkg="wp3_compressor" type="wp3_compressor_node" name="jetson6_compressor">
-        <param name="sensor_name" value="jetson6" />
+    <node pkg="wp3_compressor" type="wp3_compressor_node" name="jetson6_comp_velodyne">
         <param name="resolution" value="0.04" />
-        <param name="sensor_type" value="1" />
+        <param name="input_topic" value="/velodyne_points" />
+        <param name="input_type" value="1" />
+        <param name="output_topic" value="/jetson6/wp3/velodyne_comp" />
+        <param name="local_frame" value="velodyne" />
+        <param name="global_frame" value="world" />
     </node>   
--->
+
 </launch>
 
