@@ -62,36 +62,36 @@ public:
       const double maxX_arg = 10, const double maxY_arg = 10, const double maxZ_arg = 10,
       const unsigned int iFrameRate_arg = 30 ):
     OctreePointCloud<PointType, LeafT, BranchT, OctreeT> (octreeResolution_arg),
-    entropy_coder_ (),
-    i_frame_rate_ (iFrameRate_arg),
-    i_frame_counter_ (0),
-    frame_ID_ (0),
-    point_count_ (0),
-    octree_resolution_(octreeResolution_arg),
-    i_frame_ (true),
-    b_show_statistics_ (showStatistics_arg),
-    pointIntensityVector_ (),
-    recent_tree_depth_(0),
-    minX_(minX_arg), minY_(minY_arg), minZ_(minZ_arg),
-    maxX_(maxX_arg), maxY_(maxY_arg), maxZ_(maxZ_arg),
+    entropy_coder (),
+    i_frame_rate (iFrameRate_arg),
+    i_frame_counter (0),
+    frame_ID (0),
+    point_count (0),
+    octree_resolution(octreeResolution_arg),
+    i_frame (true),
+    b_show_statistics (showStatistics_arg),
+    pointIntensityVector (),
+    recent_tree_depth(0),
+    minX(minX_arg), minY(minY_arg), minZ(minZ_arg),
+    maxX(maxX_arg), maxY(maxY_arg), maxZ(maxZ_arg),
     logFile("/home/nvidia/encoderlog.txt"){
 
-    if(b_show_statistics_){
+    if(b_show_statistics){
       logStream.open(logFile.c_str());
       logStream << "NumPoints\tXYZpc\tXYZbpp\tINTbpp\tOsize\tCsize\tBPP\tCPC\tRATIO" << std::endl;
     }
 
-    frame_header_identifier_ = "<WP3-OCT-COMPRESSED>";
+    frame_header_identifier = "<WP3-OCT-COMPRESSED>";
 
-    this->setResolution (octree_resolution_);
-    this->defineBoundingBox(minX_, minY_, minZ_, maxX_, maxY_, maxZ_);
+    this->setResolution (octree_resolution);
+    this->defineBoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
 
   } // End Constructor
 
 
   /** \brief Deconstructor. */
   virtual ~PointCloudCompression (){
-    if(b_show_statistics_)
+    if(b_show_statistics)
       logStream.close();
   }
 
@@ -101,9 +101,9 @@ public:
    */
   inline void setOutputCloud (const PointCloudPtr &cloud_arg)
   {
-    if (output_ != cloud_arg)
+    if (output != cloud_arg)
     {
-      output_ = cloud_arg;
+      output = cloud_arg;
     }
   }
 
@@ -147,41 +147,41 @@ private:
   void entropyEncoding(std::ostream& compressed_tree_data_out_arg);
 
   /** \brief Pointer to output point cloud dataset. */
-  PointCloudPtr output_;
+  PointCloudPtr output;
 
   /** \brief Vector for storing binary tree structure */
-  std::vector<char> binary_tree_data_vector_;
+  std::vector<char> binary_tree_data_vector;
 
   /** \brief Vector for storing point intensity information  */
-  std::vector<char> pointIntensityVector_;
+  std::vector<char> pointIntensityVector;
 
   /** \brief Static range coder instance */
-  pcl::StaticRangeCoder entropy_coder_;
+  pcl::StaticRangeCoder entropy_coder;
 
   // Settings
-  uint32_t i_frame_rate_;
-  uint32_t i_frame_counter_;
-  uint32_t frame_ID_;
-  uint64_t point_count_;
-  uint64_t compressed_point_data_len_;
-  uint64_t compressed_intensity_data_len_;
-  bool i_frame_;
-  const double octree_resolution_;
+  uint32_t i_frame_rate;
+  uint32_t i_frame_counter;
+  uint32_t frame_ID;
+  uint64_t point_count;
+  uint64_t compressed_point_data_len;
+  uint64_t compressed_intensity_data_len;
+  bool i_frame;
+  const double octree_resolution;
 
-  unsigned int recent_tree_depth_;
+  unsigned int recent_tree_depth;
 
-  const double minX_;
-  const double minY_;
-  const double minZ_;
-  const double maxX_;
-  const double maxY_;
-  const double maxZ_;
+  const double minX;
+  const double minY;
+  const double minZ;
+  const double maxX;
+  const double maxY;
+  const double maxZ;
 
   //bool activating statistics
-  bool b_show_statistics_;
+  bool b_show_statistics;
 
   //header
-  const char* frame_header_identifier_;
+  const char* frame_header_identifier;
 
   // Logging
   std::string logFile;

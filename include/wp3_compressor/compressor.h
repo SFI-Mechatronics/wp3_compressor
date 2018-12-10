@@ -33,12 +33,6 @@
 
 #include "octree_compression.h"
 
-// Typedefs
-//typedef pcl::PointXYZ PointType;
-//typedef pcl::PointCloud<PointType> PointCloud;
-
-
-
 
 namespace wp3 {
 

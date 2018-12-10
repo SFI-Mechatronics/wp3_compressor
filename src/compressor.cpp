@@ -43,6 +43,7 @@ CloudCompressor::~CloudCompressor(){
 void CloudCompressor::setTransform(const tf::StampedTransform &value)
 {
   transform = value;
+
 }
 
 std::string CloudCompressor::getGlobalFrame() const
@@ -80,7 +81,7 @@ void CloudCompressor::Publish(){
     time_t start = clock();
 
     // Transform the point cloud
-    pcl_ros::transformPointCloud(*transformedCloud, inputCloud, transform);
+    pcl_ros::transformPointCloud(inputCloud, *transformedCloud, transform);
 
     // Crop the point cloud
     crop.setInputCloud(transformedCloud);
