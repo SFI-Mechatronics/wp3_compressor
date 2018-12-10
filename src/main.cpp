@@ -24,8 +24,8 @@ void killHandler(int)
 }
 
 // Callback for ROS subscriber
-void roscallbackXYZ(const sensor_msgs::PointCloud2ConstPtr &cloud, wp3::CloudCompressor<pcl::PointXYZ> * compressor,
-                 tf::TransformListener * tfListener){
+void roscallbackXYZ(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &cloud, wp3::CloudCompressor * compressor,
+                    tf::TransformListener * tfListener){
 
   // Get transformation published by master
   tf::StampedTransform transform;
@@ -36,14 +36,13 @@ void roscallbackXYZ(const sensor_msgs::PointCloud2ConstPtr &cloud, wp3::CloudCom
     ROS_ERROR("Local TF: %s",ex.what());
     return;
   }
-
   compressor->setTransform(transform);
   compressor->setInputCloud(cloud);
   compressor->setDataReceived(true);
 }
 
-void roscallbackXYZI(const sensor_msgs::PointCloud2ConstPtr &cloud, wp3::CloudCompressor<pcl::PointXYZI> * compressor,
-                 tf::TransformListener * tfListener){
+void roscallbackXYZI(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr &cloud, wp3::CloudCompressor * compressor,
+                     tf::TransformListener * tfListener){
 
   // Get transformation published by master
   tf::StampedTransform transform;
@@ -125,17 +124,16 @@ int main(int argc, char **argv)
     minPT << _MINX, _MINY, _MINZ, 1;
     maxPT << _MAXX, _MAXY, _MAXZ, 1;
 
-    wp3::CloudCompressor<pcl::PointXYZ> compressorXYZ(outputTopic, globalFrame, localFrame, resolution, _IFRAMERATE, minPT, maxPT, _STATISTICS);
-    wp3::CloudCompressor<pcl::PointXYZI> compressorXYZI(outputTopic, globalFrame, localFrame, resolution, _IFRAMERATE, minPT, maxPT, _STATISTICS);
+    wp3::CloudCompressor compressor(outputTopic, globalFrame, localFrame, resolution, _IFRAMERATE, minPT, maxPT, _STATISTICS);
 
     tf::TransformListener tfListener;
     ros::Subscriber sub;
     switch (inputType){
     case 0:
-      sub = nh.subscribe<sensor_msgs::PointCloud2>(inputTopic, 1, boost::bind(&roscallbackXYZ, _1, &compressorXYZ, &tfListener));
+      sub = nh.subscribe<pcl::PointCloud<pcl::PointXYZ> >(inputTopic, 1, boost::bind(&roscallbackXYZ, _1, &compressor, &tfListener));
       break;
     case 1:
-      sub = nh.subscribe<sensor_msgs::PointCloud2>(inputTopic, 1, boost::bind(&roscallbackXYZI, _1, &compressorXYZI, &tfListener));
+      sub = nh.subscribe<pcl::PointCloud<pcl::PointXYZI> >(inputTopic, 1, boost::bind(&roscallbackXYZI, _1, &compressor, &tfListener));
       break;
     default:
       ROS_ERROR("%s","Incorrect input_type used!");
@@ -149,18 +147,8 @@ int main(int argc, char **argv)
 #endif
 
       ros::spinOnce();
+      compressor.Publish();
 
-      switch (inputType){
-      case 0:
-        compressorXYZ.Publish();
-        break;
-      case 1:
-        compressorXYZI.Publish();
-        break;
-      default:
-        ROS_ERROR("%s","Incorrect input_type used!");
-        break;
-      }
 
 #if _STATISTICS
       clock_t end = clock();

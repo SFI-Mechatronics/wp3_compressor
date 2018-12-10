@@ -42,19 +42,19 @@
 
 namespace wp3 {
 
-template <typename PointT>
 class CloudCompressor
 {
-  typedef typename pcl::PointCloud<PointT> PointCloud;
-  typedef typename wp3::PointCloudCompression<PointT> Compressor;
+  typedef pcl::PointXYZI PointType;
+  typedef pcl::PointCloud<PointType> PointCloud;
+  typedef wp3::PointCloudCompression Compressor;
 
 public:
-	// Constructor
+  // Constructor
   CloudCompressor(std::string outputMsgTopic, std::string globalFrame, std::string localFrame, double octreeResolution,
                   unsigned int iFrameRate, Eigen::Vector4f minPT, Eigen::Vector4f maxPT, bool showStatistics);
 
-	// Deconstrucor
-	~CloudCompressor();
+  // Deconstrucor
+  ~CloudCompressor();
 
   // Process and publish compressed cloud.
   void Publish();
@@ -65,7 +65,8 @@ public:
 
   std::string getLocalFrame() const;
 
-  void setInputCloud(const sensor_msgs::PointCloud2ConstPtr &value);
+  void setInputCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &value);
+  void setInputCloud(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr &value);
 
   void setDataReceived(bool value);
 
@@ -82,21 +83,21 @@ private:
 
   PointCloud inputCloud;
 
-	// Pointers to temporary point clouds
-  typename PointCloud::Ptr transformedCloud;
-  typename PointCloud::Ptr croppedCloud;
+  // Pointers to temporary point clouds
+  PointCloud::Ptr transformedCloud;
+  PointCloud::Ptr croppedCloud;
 
-	// Compression setup
+  // Compression setup
   double octreeResolution;
 
   Compressor pointCloudEncoder;
 
-	// Box crop filter
-  pcl::CropBox<PointT> crop;
+  // Box crop filter
+  pcl::CropBox<PointType> crop;
 
   bool dataReceived;
 
-	// Logging
+  // Logging
   bool showStatistics;
   std::string logFile;
   std::ofstream logStream;

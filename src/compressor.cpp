@@ -10,9 +10,8 @@
 namespace wp3 {
 
 // Constructor
-template <typename PointT>
-CloudCompressor<PointT>::CloudCompressor(std::string outputMsgTopic, std::string globalFrame, std::string localFrame, double octreeResolution,
-                                         unsigned int iFrameRate, Eigen::Vector4f minPT, Eigen::Vector4f maxPT, bool showStatistics) :
+CloudCompressor::CloudCompressor(std::string outputMsgTopic, std::string globalFrame, std::string localFrame, double octreeResolution,
+                                 unsigned int iFrameRate, Eigen::Vector4f minPT, Eigen::Vector4f maxPT, bool showStatistics) :
   transformedCloud(new PointCloud()),
   croppedCloud(new PointCloud ()),
   octreeResolution(octreeResolution),
@@ -36,46 +35,44 @@ CloudCompressor<PointT>::CloudCompressor(std::string outputMsgTopic, std::string
   pub = nh.advertise<std_msgs::String>(outputMsgTopic, 1);
 }
 
-template <typename PointT>
-CloudCompressor<PointT>::~CloudCompressor(){
+CloudCompressor::~CloudCompressor(){
   if(showStatistics)
     logStream.close();
 }
 
-template <typename PointT>
-void CloudCompressor<PointT>::setTransform(const tf::StampedTransform &value)
+void CloudCompressor::setTransform(const tf::StampedTransform &value)
 {
   transform = value;
 }
 
-template <typename PointT>
-std::string CloudCompressor<PointT>::getGlobalFrame() const
+std::string CloudCompressor::getGlobalFrame() const
 {
   return globalFrame;
 }
 
-template <typename PointT>
-std::string CloudCompressor<PointT>::getLocalFrame() const
+std::string CloudCompressor::getLocalFrame() const
 {
   return localFrame;
 }
 
-template <typename PointT>
-void CloudCompressor<PointT>::setInputCloud(const sensor_msgs::PointCloud2ConstPtr &value)
+void CloudCompressor::setInputCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &value)
 {
-  pcl::fromROSMsg(*value,inputCloud);
+  pcl::copyPointCloud(*value, inputCloud);
 }
 
-template <typename PointT>
-void CloudCompressor<PointT>::setDataReceived(bool value)
+void CloudCompressor::setInputCloud(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr &value)
+{
+  pcl::copyPointCloud(*value, inputCloud);
+}
+
+void CloudCompressor::setDataReceived(bool value)
 {
   dataReceived = value;
 }
 
 
 // Callback for ROS subscriber
-template <typename PointT>
-void CloudCompressor<PointT>::Publish(){
+void CloudCompressor::Publish(){
 
   if(dataReceived){
     dataReceived = false;
@@ -122,7 +119,5 @@ void CloudCompressor<PointT>::Publish(){
   }
 
 }
-  template class CloudCompressor<pcl::PointXYZ>;
-  template class CloudCompressor<pcl::PointXYZI>;
 
 }
