@@ -33,6 +33,8 @@ CloudCompressor::CloudCompressor(std::string outputMsgTopic, std::string globalF
   crop.setMax(maxPT);
 
   pub = nh.advertise<std_msgs::String>(outputMsgTopic, 1);
+
+  normDist = (octreeResolution * 360.0 * 212.0)/(2.0*30.0*3.14159265);
 }
 
 CloudCompressor::~CloudCompressor(){
@@ -58,12 +60,21 @@ std::string CloudCompressor::getLocalFrame() const
 
 void CloudCompressor::setInputCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &value)
 {
-  pcl::copyPointCloud(*value, inputCloud);
+ // pcl::copyPointCloud(*value, inputCloud);
+  inputCloud.points.resize(value->size());
+
+  for (size_t i = 0; i < value->size(); i++) {
+      inputCloud.points[i].x = value->points[i].x;
+      inputCloud.points[i].y = value->points[i].y;
+      inputCloud.points[i].z = value->points[i].z;
+      inputCloud.points[i].intensity = std::min((value->points[i].z / normDist),1.0f);
+  }
 }
 
 void CloudCompressor::setInputCloud(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr &value)
 {
-  pcl::copyPointCloud(*value, inputCloud);
+  //pcl::copyPointCloud(*value, inputCloud);
+  inputCloud = *value;
 }
 
 void CloudCompressor::setDataReceived(bool value)

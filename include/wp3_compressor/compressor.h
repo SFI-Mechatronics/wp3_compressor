@@ -83,7 +83,7 @@ private:
 
   // Compression setup
   double octreeResolution;
-
+  float normDist;
   Compressor pointCloudEncoder;
 
   // Box crop filter

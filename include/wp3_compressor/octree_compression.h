@@ -32,8 +32,82 @@ using namespace pcl::octree;
 
 namespace wp3 {
 
+class OctreePointCloudIntensityContainer : public OctreeContainerBase
+{
+public:
+  /** \brief Class initialization. */
+  OctreePointCloudIntensityContainer () : point_counter_ (0), intensity_(0)
+  {
+  }
+
+  /** \brief Empty class deconstructor. */
+  virtual ~OctreePointCloudIntensityContainer ()
+  {
+  }
+
+  /** \brief deep copy function */
+  virtual OctreePointCloudIntensityContainer *
+  deepCopy () const
+  {
+    return (new OctreePointCloudIntensityContainer (*this));
+  }
+
+  /** \brief Equal comparison operator
+          * \param[in] other OctreePointCloudDensityContainer to compare with
+          */
+  virtual bool operator==(const OctreeContainerBase& other) const
+  {
+    const OctreePointCloudIntensityContainer* otherContainer =
+        dynamic_cast<const OctreePointCloudIntensityContainer*>(&other);
+
+    return (this->intensity_==otherContainer->intensity_);
+  }
+
+  /** \brief Read input data. Only an internal counter is increased.
+           */
+  void
+  addPointIndex (int)
+  {
+    point_counter_++;
+  }
+
+  void
+  addPointIntensity (float i)
+  {
+    intensity_ += i;
+  }
+
+  /** \brief Return point counter.
+           * \return Amount of points
+           */
+  unsigned int
+  getPointCounter ()
+  {
+    return (point_counter_);
+  }
+
+  float
+  getIntensity ()
+  {
+    return (intensity_);
+  }
+
+  /** \brief Reset leaf node. */
+  virtual void
+  reset ()
+  {
+    point_counter_ = 0;
+    intensity_ = 0.0;
+  }
+
+private:
+  unsigned int point_counter_;
+  float intensity_;
+
+};
+
 typedef pcl::PointXYZI PointType;
-typedef OctreePointCloudDensityContainer LeafT;
+typedef OctreePointCloudIntensityContainer LeafT;
 typedef OctreeContainerEmpty BranchT;
 typedef Octree2BufBase<LeafT, BranchT> OctreeT;
 
@@ -123,12 +197,55 @@ public:
   {
     unsigned int point_count = 0;
 
-    OctreePointCloudDensityContainer* leaf = this->findLeafAtPoint (point_arg);
+    OctreePointCloudIntensityContainer* leaf = this->findLeafAtPoint (point_arg);
 
     if (leaf)
       point_count = leaf->getPointCounter ();
 
     return (point_count);
+  }
+
+  // Redefinition of OctreePointCloud function
+  void addPointIdx (const int point_idx_arg)
+  {
+    OctreeKey key;
+
+    assert (point_idx_arg < static_cast<int> (input_->points.size ()));
+
+    const PointType& point = input_->points[point_idx_arg];
+
+    // make sure bounding box is big enough
+    adoptBoundingBoxToPoint (point);
+
+    // generate key
+    genOctreeKeyforPoint (point, key);
+
+    LeafNode* leaf_node;
+    BranchNode* parent_branch_of_leaf_node;
+    unsigned int depth_mask = this->createLeafRecursive (key, this->depth_mask_ ,this->root_node_, leaf_node, parent_branch_of_leaf_node);
+
+//    if (this->dynamic_depth_enabled_ && depth_mask)
+//    {
+//      // get amount of objects in leaf container
+//      size_t leaf_obj_count = (*leaf_node)->getSize ();
+
+//      while  (leaf_obj_count>=max_objs_per_leaf_ && depth_mask)
+//      {
+//        // index to branch child
+//        unsigned char child_idx = key.getChildIdxWithDepthMask (depth_mask*2);
+
+//        expandLeafNode (leaf_node,
+//                        parent_branch_of_leaf_node,
+//                        child_idx,
+//                        depth_mask);
+
+//        depth_mask = this->createLeafRecursive (key, this->depth_mask_ ,this->root_node_, leaf_node, parent_branch_of_leaf_node);
+//        leaf_obj_count = (*leaf_node)->getSize ();
+//      }
+
+//    }
+
+    (*leaf_node)->addPointIntensity (point.intensity);
   }
 
 private:
