@@ -168,20 +168,21 @@ void PointCloudCompression::entropyEncoding(std::ostream& compressed_tree_data_o
 void PointCloudCompression::serializeTreeCallback (LeafT &leaf_arg, const OctreeKey & key_arg)
 {
   // reference to point indices vector stored within octree leaf
-//  const unsigned int density = leaf_arg.getPointCounter();
-  const float leaf_intensity = leaf_arg.getIntensity();
-  leaf_arg.reset();
+  //  const unsigned int density = leaf_arg.getPointCounter();
+  //  const float leaf_intensity = leaf_arg.getIntensity();
 
-  unsigned char intensity;
 
   // get intensity
-  const char* intens = reinterpret_cast<const char*>(&leaf_intensity);
+  //  const char* intens = reinterpret_cast<const char*>(&leaf_intensity);
 
-//  intensity = static_cast<unsigned char> (std::max<int>(0, std::min<float>(255.0, leaf_intensity*255.0)));
+  const char intens = static_cast<unsigned char>(
+        std::max<int>(0, std::min<float>(255.0, leaf_arg.getIntensity())));
 
-  for (int i = 0; i<(sizeof(leaf_intensity)); i++)
-    pointIntensityVector.push_back (intens[i]);
+  //  for (int i = 0; i<(sizeof(leaf_intensity)); i++)
+  //    pointIntensityVector.push_back (intens[i]);
 
+  leaf_arg.reset();
+  pointIntensityVector.push_back(intens);
 } // End serializeTreeCallback
 
 } // End namespace wp3

@@ -68,7 +68,7 @@ void CloudCompressor::setInputCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstP
       inputCloud.points[j].x = value->points[i].x;
       inputCloud.points[j].y = value->points[i].y;
       inputCloud.points[j].z = value->points[i].z;
-      inputCloud.points[j].intensity = std::min((value->points[i].z / normDist),1.0f);
+      inputCloud.points[j].intensity = std::min((value->points[i].z / normDist),1.0f)*255.0;
       j++;
     }
   }

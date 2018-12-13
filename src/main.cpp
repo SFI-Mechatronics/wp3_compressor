@@ -99,24 +99,6 @@ int main(int argc, char **argv)
     nh.getParam("global_frame", globalFrame);
 
     ROS_INFO("%s", "Starting node.");
-    //      inputTopic = "/" + baseName + "/" + inputTopic;
-    //      outputTopic = "/" + basseName + _KINECTPOINTS;
-    //      velodyneTopic = "/velodyne_points";
-
-    //      kinectFrame = sensorName + _KINECTFRAME;
-    //      velodyneFrame = "velodyne";
-    //      globalFrame = _GLOBALFRAME;
-
-    //    case 1: // Velodyne
-    //      ROS_INFO("Starting node using VELODYNE");
-    //      outputTopic = "/" + sensorName + _TOPICOUT + "velodyne_comp";
-    //      inputTopic = "/velodyne_points";
-    //      localFrame = "velodyne";
-    //      globalFrame = _GLOBALFRAME;
-    //      break;
-
-    //    } // End switch(sensorType)
-
 
     ros::Duration(1.0).sleep();
 
