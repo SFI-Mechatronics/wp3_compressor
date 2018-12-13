@@ -62,13 +62,20 @@ void CloudCompressor::setInputCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstP
 {
  // pcl::copyPointCloud(*value, inputCloud);
   inputCloud.points.resize(value->size());
-
+  int j = 0;
   for (size_t i = 0; i < value->size(); i++) {
-      inputCloud.points[i].x = value->points[i].x;
-      inputCloud.points[i].y = value->points[i].y;
-      inputCloud.points[i].z = value->points[i].z;
-      inputCloud.points[i].intensity = std::min((value->points[i].z / normDist),1.0f);
+    if(pcl_isfinite(value->points[i].z)){
+      inputCloud.points[j].x = value->points[i].x;
+      inputCloud.points[j].y = value->points[i].y;
+      inputCloud.points[j].z = value->points[i].z;
+      inputCloud.points[j].intensity = std::min((value->points[i].z / normDist),1.0f);
+      j++;
+    }
   }
+  inputCloud.points.resize(j);
+  inputCloud.height = 1;
+  inputCloud.width  = static_cast<uint32_t>(j);
+  inputCloud.is_dense = true;
 }
 
 void CloudCompressor::setInputCloud(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr &value)

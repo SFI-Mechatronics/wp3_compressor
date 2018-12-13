@@ -106,18 +106,18 @@ private:
 
 };
 
-typedef pcl::PointXYZI PointType;
+typedef pcl::PointXYZI PointT;
 typedef OctreePointCloudIntensityContainer LeafT;
 typedef OctreeContainerEmpty BranchT;
 typedef Octree2BufBase<LeafT, BranchT> OctreeT;
 
-class PointCloudCompression : public OctreePointCloud<PointType, LeafT, BranchT, OctreeT>
+class PointCloudCompression : public OctreePointCloud<PointT, LeafT, BranchT, OctreeT>
 {
 public:
 
-  typedef typename OctreePointCloud<PointType, LeafT, BranchT, OctreeT>::PointCloud PointCloud;
-  typedef typename OctreePointCloud<PointType, LeafT, BranchT, OctreeT>::PointCloudPtr PointCloudPtr;
-  typedef typename OctreePointCloud<PointType, LeafT, BranchT, OctreeT>::PointCloudConstPtr PointCloudConstPtr;
+  typedef typename OctreePointCloud<PointT, LeafT, BranchT, OctreeT>::PointCloud PointCloud;
+  typedef typename OctreePointCloud<PointT, LeafT, BranchT, OctreeT>::PointCloudPtr PointCloudPtr;
+  typedef typename OctreePointCloud<PointT, LeafT, BranchT, OctreeT>::PointCloudConstPtr PointCloudConstPtr;
 
   // Boost shared pointers
   typedef boost::shared_ptr<PointCloudCompression > Ptr;
@@ -135,7 +135,7 @@ public:
       const double minX_arg = 0, const double minY_arg = 0, const double minZ_arg = 0,
       const double maxX_arg = 10, const double maxY_arg = 10, const double maxZ_arg = 10,
       const unsigned int iFrameRate_arg = 30 ):
-    OctreePointCloud<PointType, LeafT, BranchT, OctreeT> (octreeResolution_arg),
+    OctreePointCloud<PointT, LeafT, BranchT, OctreeT> (octreeResolution_arg),
     entropy_coder (),
     i_frame_rate (iFrameRate_arg),
     i_frame_counter (0),
@@ -193,7 +193,7 @@ public:
    * \param[in] point_arg: a point addressing a voxel
    * \return amount of points that fall within leaf node voxel
    */
-  unsigned int getVoxelDensityAtPoint (const PointType& point_arg) const
+  unsigned int getVoxelDensityAtPoint (const PointT& point_arg) const
   {
     unsigned int point_count = 0;
 
@@ -212,7 +212,7 @@ public:
 
     assert (point_idx_arg < static_cast<int> (input_->points.size ()));
 
-    const PointType& point = input_->points[point_idx_arg];
+    const PointT& point = input_->points[point_idx_arg];
 
     // make sure bounding box is big enough
     adoptBoundingBoxToPoint (point);
