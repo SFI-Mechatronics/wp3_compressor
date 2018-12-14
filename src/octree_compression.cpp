@@ -98,8 +98,7 @@ void PointCloudCompression::encodePointCloud (const PointCloudConstPtr &cloud_ar
     i_frame = false;
 
   } else {
-    if (b_show_statistics)
-      PCL_INFO ("Info: Dropping empty point cloud\n");
+    PCL_INFO ("Info: Dropping empty point cloud\n");
     this->deleteTree();
     this->setResolution (octree_resolution);
     this->defineBoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
@@ -109,14 +108,14 @@ void PointCloudCompression::encodePointCloud (const PointCloudConstPtr &cloud_ar
 
 } // End encodePointCloud()
 
-void PointCloudCompression::writeFrameHeader (std::ostream& compressed_tree_data_out_arg)
+void PointCloudCompression::writeFrameHeader (std::ostream & compressed_tree_data_out_arg)
 {
   // encode header identifier
-  compressed_tree_data_out_arg.write (reinterpret_cast<const char*> (frame_header_identifier), strlen (frame_header_identifier));
+  compressed_tree_data_out_arg.write (reinterpret_cast<const char *> (frame_header_identifier), strlen (frame_header_identifier));
   // encode point cloud header id
-  compressed_tree_data_out_arg.write (reinterpret_cast<const char*> (&frame_ID), sizeof (frame_ID));
+  compressed_tree_data_out_arg.write (reinterpret_cast<const char *> (&frame_ID), sizeof (frame_ID));
   // encode frame type (I/P-frame)
-  compressed_tree_data_out_arg.write (reinterpret_cast<const char*> (&i_frame), sizeof (i_frame));
+  compressed_tree_data_out_arg.write (reinterpret_cast<const char *> (&i_frame), sizeof (i_frame));
   if (i_frame)
   {
     double min_x, min_y, min_z, max_x, max_y, max_z;
@@ -129,20 +128,20 @@ void PointCloudCompression::writeFrameHeader (std::ostream& compressed_tree_data
     point_count = this->leaf_count_;
 
     // encode coding configuration
-    compressed_tree_data_out_arg.write (reinterpret_cast<const char*> (&point_count), sizeof (point_count));
-    compressed_tree_data_out_arg.write (reinterpret_cast<const char*> (&octree_resolution), sizeof (octree_resolution));
+    compressed_tree_data_out_arg.write (reinterpret_cast<const char *> (&point_count), sizeof (point_count));
+    compressed_tree_data_out_arg.write (reinterpret_cast<const char *> (&octree_resolution), sizeof (octree_resolution));
 
     // encode octree bounding box
-    compressed_tree_data_out_arg.write (reinterpret_cast<const char*> (&min_x), sizeof (min_x));
-    compressed_tree_data_out_arg.write (reinterpret_cast<const char*> (&min_y), sizeof (min_y));
-    compressed_tree_data_out_arg.write (reinterpret_cast<const char*> (&min_z), sizeof (min_z));
-    compressed_tree_data_out_arg.write (reinterpret_cast<const char*> (&max_x), sizeof (max_x));
-    compressed_tree_data_out_arg.write (reinterpret_cast<const char*> (&max_y), sizeof (max_y));
-    compressed_tree_data_out_arg.write (reinterpret_cast<const char*> (&max_z), sizeof (max_z));
+    compressed_tree_data_out_arg.write (reinterpret_cast<const char *> (&min_x), sizeof (min_x));
+    compressed_tree_data_out_arg.write (reinterpret_cast<const char *> (&min_y), sizeof (min_y));
+    compressed_tree_data_out_arg.write (reinterpret_cast<const char *> (&min_z), sizeof (min_z));
+    compressed_tree_data_out_arg.write (reinterpret_cast<const char *> (&max_x), sizeof (max_x));
+    compressed_tree_data_out_arg.write (reinterpret_cast<const char *> (&max_y), sizeof (max_y));
+    compressed_tree_data_out_arg.write (reinterpret_cast<const char *> (&max_z), sizeof (max_z));
   }
 } // End writeFrameHeader()
 
-void PointCloudCompression::entropyEncoding(std::ostream& compressed_tree_data_out_arg)
+void PointCloudCompression::entropyEncoding(std::ostream & compressed_tree_data_out_arg)
 {
   uint64_t binary_tree_data_vector_size;
   uint64_t point_intensity_data_vector_size;
@@ -152,12 +151,12 @@ void PointCloudCompression::entropyEncoding(std::ostream& compressed_tree_data_o
 
   // encode binary octree structure
   binary_tree_data_vector_size = binary_tree_data_vector.size ();
-  compressed_tree_data_out_arg.write (reinterpret_cast<const char*> (&binary_tree_data_vector_size), sizeof (binary_tree_data_vector_size));
+  compressed_tree_data_out_arg.write (reinterpret_cast<const char *> (&binary_tree_data_vector_size), sizeof (binary_tree_data_vector_size));
   compressed_point_data_len += entropy_coder.encodeCharVectorToStream (binary_tree_data_vector, compressed_tree_data_out_arg);
 
   // encode leaf voxel intensity
   point_intensity_data_vector_size = pointIntensityVector.size ();
-  compressed_tree_data_out_arg.write (reinterpret_cast<const char*> (&point_intensity_data_vector_size), sizeof (point_intensity_data_vector_size));
+  compressed_tree_data_out_arg.write (reinterpret_cast<const char *> (&point_intensity_data_vector_size), sizeof (point_intensity_data_vector_size));
   compressed_intensity_data_len += entropy_coder.encodeCharVectorToStream (pointIntensityVector, compressed_tree_data_out_arg);
 
   // flush output stream
@@ -165,21 +164,10 @@ void PointCloudCompression::entropyEncoding(std::ostream& compressed_tree_data_o
 
 } // End entropyEncoding()
 
-void PointCloudCompression::serializeTreeCallback (LeafT &leaf_arg, const OctreeKey & key_arg)
+void PointCloudCompression::serializeTreeCallback (LeafT & leaf_arg, const OctreeKey & key_arg)
 {
-  // reference to point indices vector stored within octree leaf
-  //  const unsigned int density = leaf_arg.getPointCounter();
-  //  const float leaf_intensity = leaf_arg.getIntensity();
-
-
-  // get intensity
-  //  const char* intens = reinterpret_cast<const char*>(&leaf_intensity);
-
   const char intens = static_cast<unsigned char>(
         std::max<int>(0, std::min<float>(255.0, leaf_arg.getIntensity())));
-
-  //  for (int i = 0; i<(sizeof(leaf_intensity)); i++)
-  //    pointIntensityVector.push_back (intens[i]);
 
   leaf_arg.reset();
   pointIntensityVector.push_back(intens);

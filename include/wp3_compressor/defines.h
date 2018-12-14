@@ -27,7 +27,7 @@
 // Filter defines
 #define _MINX 0.0
 #define _MINY 0.0
-#define _MINZ 0.0
+#define _MINZ 0.1
 #define _MAXX 10.0
 #define _MAXY 10.0
 #define _MAXZ 4.0

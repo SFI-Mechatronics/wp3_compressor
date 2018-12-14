@@ -24,7 +24,8 @@ void killHandler(int)
 }
 
 // Callback for ROS subscriber
-void roscallbackXYZ(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &cloud, wp3::CloudCompressor * compressor,
+template<typename PT>
+void roscallback(const typename pcl::PointCloud<PT>::ConstPtr & cloud, wp3::CloudCompressor * compressor,
                     tf::TransformListener * tfListener){
 
   // Get transformation published by master
@@ -32,28 +33,10 @@ void roscallbackXYZ(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &cloud, wp3::
   try{
     tfListener->lookupTransform(compressor->getGlobalFrame(), compressor->getLocalFrame(), ros::Time(0), transform);
   }
-  catch (tf::TransformException &ex) {
+  catch (tf::TransformException & ex) {
     ROS_ERROR("Local TF: %s",ex.what());
     return;
   }
-  compressor->setTransform(transform);
-  compressor->setInputCloud(cloud);
-  compressor->setDataReceived(true);
-}
-
-void roscallbackXYZI(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr &cloud, wp3::CloudCompressor * compressor,
-                     tf::TransformListener * tfListener){
-
-  // Get transformation published by master
-  tf::StampedTransform transform;
-  try{
-    tfListener->lookupTransform(compressor->getGlobalFrame(), compressor->getLocalFrame(), ros::Time(0), transform);
-  }
-  catch (tf::TransformException &ex) {
-    ROS_ERROR("Local TF: %s",ex.what());
-    return;
-  }
-
   compressor->setTransform(transform);
   compressor->setInputCloud(cloud);
   compressor->setDataReceived(true);
@@ -98,10 +81,6 @@ int main(int argc, char **argv)
     nh.getParam("local_frame", localFrame);
     nh.getParam("global_frame", globalFrame);
 
-    ROS_INFO("%s", "Starting node.");
-
-    ros::Duration(1.0).sleep();
-
     Eigen::Vector4f minPT, maxPT;
     minPT << _MINX, _MINY, _MINZ, 1;
     maxPT << _MAXX, _MAXY, _MAXZ, 1;
@@ -112,16 +91,19 @@ int main(int argc, char **argv)
     ros::Subscriber sub;
     switch (inputType){
     case 0:
-      sub = nh.subscribe<pcl::PointCloud<pcl::PointXYZ> >(inputTopic, 1, boost::bind(&roscallbackXYZ, _1, &compressor, &tfListener));
+      sub = nh.subscribe<pcl::PointCloud<pcl::PointXYZ> >(inputTopic, 1, boost::bind(&roscallback<pcl::PointXYZ>, _1, &compressor, &tfListener));
       break;
     case 1:
-      sub = nh.subscribe<pcl::PointCloud<pcl::PointXYZI> >(inputTopic, 1, boost::bind(&roscallbackXYZI, _1, &compressor, &tfListener));
+      sub = nh.subscribe<pcl::PointCloud<pcl::PointXYZI> >(inputTopic, 1, boost::bind(&roscallback<pcl::PointXYZI>, _1, &compressor, &tfListener));
       break;
     default:
       ROS_ERROR("%s","Incorrect input_type used!");
       break;
     }
 
+    ROS_INFO("%s", "Starting node.");
+    // Wait for TF listener to register TFs.
+    ros::Duration(1.0).sleep();
 
     while(ros::ok()){
 #if _STATISTICS
@@ -130,7 +112,6 @@ int main(int argc, char **argv)
 
       ros::spinOnce();
       compressor.Publish();
-
 
 #if _STATISTICS
       clock_t end = clock();

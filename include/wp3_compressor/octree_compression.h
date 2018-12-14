@@ -55,10 +55,10 @@ public:
   /** \brief Equal comparison operator
           * \param[in] other OctreePointCloudDensityContainer to compare with
           */
-  virtual bool operator==(const OctreeContainerBase& other) const
+  virtual bool operator==(const OctreeContainerBase & other) const
   {
-    const OctreePointCloudIntensityContainer* otherContainer =
-        dynamic_cast<const OctreePointCloudIntensityContainer*>(&other);
+    const OctreePointCloudIntensityContainer * otherContainer =
+        dynamic_cast<const OctreePointCloudIntensityContainer *>(&other);
 
     return (this->intensity_==otherContainer->intensity_);
   }
@@ -173,7 +173,7 @@ public:
   /** \brief Provide a pointer to the output data set.
    * \param cloud_arg: the boost shared pointer to a PointCloud message
    */
-  inline void setOutputCloud (const PointCloudPtr &cloud_arg)
+  inline void setOutputCloud (const PointCloudPtr & cloud_arg)
   {
     if (output != cloud_arg)
     {
@@ -186,18 +186,18 @@ public:
    * \param cloud_arg:  point cloud to be compressed
    * \param compressed_tree_data_out_arg:  binary output stream containing compressed data
    */
-  void encodePointCloud (const PointCloudConstPtr &cloud_arg, std::ostream& compressed_tree_data_out_arg);
+  void encodePointCloud (const PointCloudConstPtr & cloud_arg, std::ostream & compressed_tree_data_out_arg);
 
 
   /** \brief Get the amount of points within a leaf node voxel which is addressed by a point
    * \param[in] point_arg: a point addressing a voxel
    * \return amount of points that fall within leaf node voxel
    */
-  unsigned int getVoxelDensityAtPoint (const PointT& point_arg) const
+  unsigned int getVoxelDensityAtPoint (const PointT & point_arg) const
   {
     unsigned int point_count = 0;
 
-    OctreePointCloudIntensityContainer* leaf = this->findLeafAtPoint (point_arg);
+    OctreePointCloudIntensityContainer * leaf = this->findLeafAtPoint (point_arg);
 
     if (leaf)
       point_count = leaf->getPointCounter ();
@@ -205,14 +205,14 @@ public:
     return (point_count);
   }
 
-  // Redefinition of OctreePointCloud function
+  // Redefinition of OctreePointCloud function to write intensity instead of point index
   void addPointIdx (const int point_idx_arg)
   {
     OctreeKey key;
 
     assert (point_idx_arg < static_cast<int> (input_->points.size ()));
 
-    const PointT& point = input_->points[point_idx_arg];
+    const PointT & point = input_->points[point_idx_arg];
 
     // make sure bounding box is big enough
     adoptBoundingBoxToPoint (point);
@@ -220,30 +220,31 @@ public:
     // generate key
     genOctreeKeyforPoint (point, key);
 
-    LeafNode* leaf_node;
-    BranchNode* parent_branch_of_leaf_node;
+    LeafNode * leaf_node;
+    BranchNode * parent_branch_of_leaf_node;
     unsigned int depth_mask = this->createLeafRecursive (key, this->depth_mask_ ,this->root_node_, leaf_node, parent_branch_of_leaf_node);
 
-//    if (this->dynamic_depth_enabled_ && depth_mask)
-//    {
-//      // get amount of objects in leaf container
-//      size_t leaf_obj_count = (*leaf_node)->getSize ();
+    // Dynamic depth not relevant - JD
+    //    if (this->dynamic_depth_enabled_ && depth_mask)
+    //    {
+    //      // get amount of objects in leaf container
+    //      size_t leaf_obj_count = (*leaf_node)->getSize ();
 
-//      while  (leaf_obj_count>=max_objs_per_leaf_ && depth_mask)
-//      {
-//        // index to branch child
-//        unsigned char child_idx = key.getChildIdxWithDepthMask (depth_mask*2);
+    //      while  (leaf_obj_count>=max_objs_per_leaf_ && depth_mask)
+    //      {
+    //        // index to branch child
+    //        unsigned char child_idx = key.getChildIdxWithDepthMask (depth_mask*2);
 
-//        expandLeafNode (leaf_node,
-//                        parent_branch_of_leaf_node,
-//                        child_idx,
-//                        depth_mask);
+    //        expandLeafNode (leaf_node,
+    //                        parent_branch_of_leaf_node,
+    //                        child_idx,
+    //                        depth_mask);
 
-//        depth_mask = this->createLeafRecursive (key, this->depth_mask_ ,this->root_node_, leaf_node, parent_branch_of_leaf_node);
-//        leaf_obj_count = (*leaf_node)->getSize ();
-//      }
+    //        depth_mask = this->createLeafRecursive (key, this->depth_mask_ ,this->root_node_, leaf_node, parent_branch_of_leaf_node);
+    //        leaf_obj_count = (*leaf_node)->getSize ();
+    //      }
 
-//    }
+    //    }
 
     (*leaf_node)->addPointIntensity (point.intensity);
   }
@@ -251,17 +252,17 @@ public:
 private:
 
 
-  virtual void serializeTreeCallback (LeafT &leaf_arg, const OctreeKey& key_arg);
+  virtual void serializeTreeCallback (LeafT & leaf_arg, const OctreeKey & key_arg);
 
   /** \brief Write frame information to output stream
    * \param compressed_tree_data_out_arg: binary output stream
    */
-  void writeFrameHeader (std::ostream& compressed_tree_data_out_arg);
+  void writeFrameHeader (std::ostream & compressed_tree_data_out_arg);
 
   /** \brief Apply entropy encoding to encoded information and output to binary stream
    * \param compressed_tree_data_out_arg: binary output stream
    */
-  void entropyEncoding(std::ostream& compressed_tree_data_out_arg);
+  void entropyEncoding(std::ostream & compressed_tree_data_out_arg);
 
   /** \brief Pointer to output point cloud dataset. */
   PointCloudPtr output;
@@ -298,7 +299,7 @@ private:
   bool b_show_statistics;
 
   //header
-  const char* frame_header_identifier;
+  const char * frame_header_identifier;
 
   // Logging
   std::string logFile;

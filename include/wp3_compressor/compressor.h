@@ -53,14 +53,14 @@ public:
   // Process and publish compressed cloud.
   void Publish();
 
-  void setTransform(const tf::StampedTransform &value);
+  void setTransform(const tf::StampedTransform & value);
 
   std::string getGlobalFrame() const;
 
   std::string getLocalFrame() const;
 
-  void setInputCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &value);
-  void setInputCloud(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr &value);
+  void setInputCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr & value);
+  void setInputCloud(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr & value);
 
   void setDataReceived(bool value);
 
