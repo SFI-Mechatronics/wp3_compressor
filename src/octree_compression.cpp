@@ -167,7 +167,7 @@ void PointCloudCompression::entropyEncoding(std::ostream & compressed_tree_data_
 void PointCloudCompression::serializeTreeCallback (LeafT & leaf_arg, const OctreeKey & key_arg)
 {
   const char intens = static_cast<unsigned char>(
-        std::max<int>(0, std::min<float>(255.0, leaf_arg.getIntensity())));
+        std::max<int>(0, std::min(leaf_arg.getIntensity(),255.0f)));
 
   leaf_arg.reset();
   pointIntensityVector.push_back(intens);

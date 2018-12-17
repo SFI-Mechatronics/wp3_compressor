@@ -84,7 +84,7 @@ private:
   // Compression setup
   double octreeResolution;
   float normDist;
-  float voxValue;
+  double voxValue;
   Compressor pointCloudEncoder;
 
   // Box crop filter
