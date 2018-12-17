@@ -6,6 +6,7 @@
  */
 
 #include "wp3_compressor/compressor.h"
+#include <math.h>
 
 namespace wp3 {
 
@@ -35,6 +36,9 @@ CloudCompressor::CloudCompressor(std::string outputMsgTopic, std::string globalF
   pub = nh.advertise<std_msgs::String>(outputMsgTopic, 1);
 
   normDist = (octreeResolution * 360.0 * 212.0)/(2.0 * 30.0 * 3.14159265);
+  float pi = 3.14159265;
+
+  voxValue = (tan(30/180*pi)*tan(35.3/180*pi)*4.0)/(octreeResolution*octreeResolution*2017088);
 }
 
 CloudCompressor::~CloudCompressor(){
@@ -68,7 +72,8 @@ void CloudCompressor::setInputCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstP
       inputCloud.points[j].x = value->points[i].x;
       inputCloud.points[j].y = value->points[i].y;
       inputCloud.points[j].z = value->points[i].z;
-      inputCloud.points[j].intensity = std::min((value->points[i].z / normDist),1.0f) * 127.0;
+      inputCloud.points[j].intensity = std::min((value->points[i].z * value->points[i].z * voxValue),1.0f) * 255.0;
+      //inputCloud.points[j].intensity = std::min((value->points[i].z / normDist),1.0f) * 127.0;
       j++;
     }
   }
