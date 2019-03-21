@@ -39,7 +39,7 @@ CloudCompressor::CloudCompressor(std::string outputMsgTopic, std::string globalF
   double pi = 3.14159265;
 
   voxValue = ((tan(30.0/180.0*pi)*tan(35.3/180.0*pi)*4.0))/(octreeResolution*octreeResolution*217088.0);
-  ROS_ERROR("%f",voxValue);
+
 }
 
 CloudCompressor::~CloudCompressor(){
