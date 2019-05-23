@@ -25,6 +25,7 @@ args="0.65 8.9 4.2 -2.11 0.0 -2.44 world jetson6_ir_optical_frame 100"/>
     <param name="output_topic" value="/jetson6/wp3/velodyne_comp" />
     <param name="local_frame" value="velodyne" />
     <param name="global_frame" value="world" />
+    <param name="floor_cutoff" value="-0.1" />
 </node>
 <!-- ================= Compressor ======================= -->
 <node pkg="wp3_compressor" type="wp3_compressor_node" name="jetson6_comp_kinect">
@@ -34,6 +35,7 @@ args="0.65 8.9 4.2 -2.11 0.0 -2.44 world jetson6_ir_optical_frame 100"/>
     <param name="output_topic" value="/jetson6/wp3/kinect_comp" />
     <param name="local_frame" value="jetson6_ir_optical_frame" />
     <param name="global_frame" value="world" />
+    <param name="floor_cutoff" value="-0.1" />
 </node>
 
 </launch>

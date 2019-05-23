@@ -73,6 +73,7 @@ int main(int argc, char **argv)
     std::string localFrame;
     std::string globalFrame;
     double resolution;
+    float minz;
 
     nh.getParam("resolution", resolution);
     nh.getParam("input_topic", inputTopic);
@@ -80,9 +81,25 @@ int main(int argc, char **argv)
     nh.getParam("output_topic", outputTopic);
     nh.getParam("local_frame", localFrame);
     nh.getParam("global_frame", globalFrame);
+    if(nh.hasParam("floor_cutoff"))
+      nh.getParam("floor_cutoff", minz);
+    else
+      minz = _MINZ;
+
+    ROS_INFO("Initializing with the following parameters:");
+    ROS_INFO("Resolution: %.2f m", resolution);
+    ROS_INFO("Input topic: %s", inputTopic.c_str());
+    ROS_INFO("Input topic type: %d (0 = XYZ, 1 = XYZI, 2 = XYXRGB)", inputType);
+    ROS_INFO("Output topic: %s", outputTopic.c_str());
+
+    ROS_INFO("Local frame: %s", localFrame.c_str());
+    ROS_INFO("Global frame: %s", globalFrame.c_str());
+
+    ROS_INFO("Floor Cutoff: %.2f m", minz);
+
 
     Eigen::Vector4f minPT, maxPT;
-    minPT << _MINX, _MINY, _MINZ, 1;
+    minPT << _MINX, _MINY, minz, 1;
     maxPT << _MAXX, _MAXY, _MAXZ, 1;
 
     wp3::CloudCompressor compressor(outputTopic, globalFrame, localFrame, resolution, _IFRAMERATE, minPT, maxPT, _STATISTICS);
