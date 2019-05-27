@@ -20,7 +20,7 @@
 #define _TOPICOUT "/wp3/"
 
 // Compression defines
-#define _STATISTICS false
+#define _STATISTICS true
 //#define _OCTREERESOLUTION 0.03
 #define _IFRAMERATE 20
 

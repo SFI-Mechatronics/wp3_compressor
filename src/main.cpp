@@ -128,12 +128,17 @@ int main(int argc, char **argv)
 #endif
 
       ros::spinOnce();
+#if _STATISTICS
+      time_t middle = clock();
+#endif
       compressor.Publish();
 
 #if _STATISTICS
-      clock_t end = clock();
+      time_t end = clock();
+      double time1 = (double) (middle-start) / CLOCKS_PER_SEC * 1000.0;
+      double time2 = (double) (end-middle) / CLOCKS_PER_SEC * 1000.0;
       double time = (double) (end-start) / CLOCKS_PER_SEC * 1000.0;
-      std::cout << "ROS Cycle time: " << time << " ms" << std::endl;
+      std::cout << "ROS Cycle time: " << time1 << " + " << time2 << " = " << time << " ms" << std::endl;
 #endif
 
       loopRate.sleep();

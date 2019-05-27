@@ -108,17 +108,28 @@ void CloudCompressor::Publish(){
     // Transform the point cloud
     pcl_ros::transformPointCloud(inputCloud, *transformedCloud, transform);
 
+    clock_t t1 = clock();
+
     // Crop the point cloud
     crop.setInputCloud(transformedCloud);
+    clock_t t2 = clock();
     crop.filter(*croppedCloud);
 
+    clock_t t3 = clock();
     // Stream for storing serialized compressed point cloud
     std::stringstream compressedData;
+
+    clock_t t4 = clock();
 
     // Encode point cloud to stream
     pointCloudEncoder.encodePointCloud(croppedCloud, compressedData);
 
     clock_t end = clock();
+    double time1 = (double) (t1-start) / CLOCKS_PER_SEC * 1000.0;
+    double time2 = (double) (t2-t1) / CLOCKS_PER_SEC * 1000.0;
+    double time3 = (double) (t3-t2) / CLOCKS_PER_SEC * 1000.0;
+    double time4 = (double) (t4-t3) / CLOCKS_PER_SEC * 1000.0;
+    double time5 = (double) (end-t4) / CLOCKS_PER_SEC * 1000.0;
     double time = (double) (end-start) / CLOCKS_PER_SEC * 1000.0;
 
     // Publish the encoded stream
@@ -140,6 +151,11 @@ void CloudCompressor::Publish(){
 
       logStream << input_size << "\t" << static_cast<float> ((input_size) * (4.0f * sizeof (float))) / 1024.0f << "\t";
       logStream << cropped_size << "\t" << static_cast<float> ((cropped_size) * (4.0f * sizeof (float))) / 1024.0f << "\t";
+      logStream << time1 << "\t";
+      logStream << time2 << "\t";
+      logStream << time3 << "\t";
+      logStream << time4 << "\t";
+      logStream << time5 << "\t";
       logStream << time << std::endl;
     }
   }
