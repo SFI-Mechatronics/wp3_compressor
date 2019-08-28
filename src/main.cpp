@@ -30,13 +30,17 @@ void roscallback(const typename pcl::PointCloud<PT>::ConstPtr & cloud, wp3::Clou
 
   // Get transformation published by master
   tf::StampedTransform transform;
-  try{
-    tfListener->lookupTransform(compressor->getGlobalFrame(), compressor->getLocalFrame(), ros::Time(0), transform);
-  }
-  catch (tf::TransformException & ex) {
-    ROS_ERROR("Local TF: %s",ex.what());
-    return;
-  }
+  if (compressor->getGlobalFrame() == compressor->getLocalFrame())
+      transform.setIdentity();
+      else  {
+        try  {
+        tfListener->lookupTransform(compressor->getGlobalFrame(), compressor->getLocalFrame(), ros::Time(0), transform);
+        }
+        catch (tf::TransformException & ex) {
+        ROS_ERROR("Local TF: %s",ex.what());
+        return;
+        }
+      }
   compressor->setTransform(transform);
   compressor->setInputCloud(cloud);
   compressor->setDataReceived(true);
