@@ -78,6 +78,7 @@ int main(int argc, char **argv)
     std::string globalFrame;
     double resolution;
     float minx, maxx, miny, maxy, minz, maxz;
+    bool crop = false;
 
     nh.getParam("resolution", resolution);
     nh.getParam("input_topic", inputTopic);
@@ -85,6 +86,9 @@ int main(int argc, char **argv)
     nh.getParam("output_topic", outputTopic);
     nh.getParam("local_frame", localFrame);
     nh.getParam("global_frame", globalFrame);
+
+    if(nh.hasParam("crop"))
+      nh.getParam("crop", crop);
 
     if(nh.hasParam("min_x"))
       nh.getParam("min_x", minx);
@@ -120,8 +124,15 @@ int main(int argc, char **argv)
 
 
     Eigen::Vector4f minPT, maxPT;
-    minPT << minx, miny, minz, 1;
-    maxPT << maxx, maxy, maxz, 1;
+    if(crop){
+      minPT << minx, miny, minz, 1;
+      maxPT << maxx, maxy, maxz, 1;
+    }
+    else{
+      minPT.setZero();
+      maxPT.setZero();
+    }
+
 
     wp3::CloudCompressor compressor(outputTopic, globalFrame, localFrame, resolution, _IFRAMERATE, minPT, maxPT, _STATISTICS);
 
