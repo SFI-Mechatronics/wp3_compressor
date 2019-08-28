@@ -25,12 +25,12 @@
 #define _IFRAMERATE 20
 
 // Filter defines
-#define _MINX 0.0
-#define _MINY 0.0
-#define _MINZ 0.1
-#define _MAXX 10.0
-#define _MAXY 10.0
-#define _MAXZ 4.0
+#define _MINX -99999.0
+#define _MINY -99999.0
+#define _MINZ -99999.0
+#define _MAXX 99999.0
+#define _MAXY 99999.0
+#define _MAXZ 99999.0
 
 //#define _MINI 2.0
 
