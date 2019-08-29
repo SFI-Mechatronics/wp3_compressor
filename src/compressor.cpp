@@ -106,10 +106,8 @@ void CloudCompressor::Publish(){
     clock_t start = clock();
 
     // Transform the point cloud
-    if (transform == transform.getIdentity()){
-      ROS_INFO("Transform skipped.");
+    if (transform == transform.getIdentity())
       *transformedCloud = inputCloud;
-    }
     else  {
       pcl_ros::transformPointCloud(inputCloud, *transformedCloud, transform);
     }
