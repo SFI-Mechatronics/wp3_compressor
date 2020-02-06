@@ -30,6 +30,7 @@
 #include <pcl_ros/transforms.h>
 #include <pcl/point_types.h>
 #include <pcl/filters/crop_box.h>
+#include <pcl_conversions/pcl_conversions.h>
 
 #include "octree_compression.h"
 
