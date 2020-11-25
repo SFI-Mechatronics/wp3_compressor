@@ -13,7 +13,7 @@ namespace wp3 {
 
 // Constructor
 CloudCompressor::CloudCompressor(std::string outputMsgTopic, std::string globalFrame, std::string localFrame, double octreeResolution,
-                                 unsigned int iFrameRate, Eigen::Vector4f minPT, Eigen::Vector4f maxPT, bool showStatistics) :
+  unsigned int iFrameRate, Eigen::Vector4f minPT, Eigen::Vector4f maxPT, bool showStatistics) :
   transformedCloud(new PointCloud()),
   croppedCloud(new PointCloud ()),
   tfListener(),
