@@ -15,13 +15,13 @@ CloudCompressor::CloudCompressor(std::string outputMsgTopic, std::string globalF
                                  unsigned int iFrameRate, Eigen::Vector4f minPT, Eigen::Vector4f maxPT, bool showStatistics) :
   transformedCloud(new PointCloud()),
   croppedCloud(new PointCloud ()),
+  tfListener(),
   octreeResolution(octreeResolution),
   globalFrame(globalFrame),
   localFrame(localFrame),
   showStatistics(showStatistics),
-  dataReceived(false),
   logFile("/home/nvidia/compressorlog.txt"),
-  pointCloudEncoder(showStatistics, octreeResolution, minPT[0], minPT[1], minPT[2], maxPT[0], maxPT[1], maxPT[2], iFrameRate)
+  pointCloudEncoder(minPT, maxPT, octreeResolution, iFrameRate, showStatistics)
 {
   if(showStatistics){
     logStream.open(logFile.c_str());
@@ -29,7 +29,6 @@ CloudCompressor::CloudCompressor(std::string outputMsgTopic, std::string globalF
   }
 
   // Setup box crop filter
-
   crop.setMin(minPT);
   crop.setMax(maxPT);
 
@@ -47,29 +46,13 @@ CloudCompressor::~CloudCompressor(){
     logStream.close();
 }
 
-void CloudCompressor::setTransform(const tf::StampedTransform & value)
-{
-  transform = value;
-
-}
-
-std::string CloudCompressor::getGlobalFrame() const
-{
-  return globalFrame;
-}
-
-std::string CloudCompressor::getLocalFrame() const
-{
-  return localFrame;
-}
-
-void CloudCompressor::setInputCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr & value)
+void CloudCompressor::compressCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr & value)
 {
   // pcl::copyPointCloud(*value, inputCloud);
   inputCloud.points.resize(value->size());
   int j = 0;
   for (size_t i = 0; i < value->size(); i++) {
-    if(pcl_isfinite(value->points[i].z)){
+    if(std::isfinite(value->points[i].z)){
       inputCloud.points[j].x = value->points[i].x;
       inputCloud.points[j].y = value->points[i].y;
       inputCloud.points[j].z = value->points[i].z;
@@ -83,81 +66,64 @@ void CloudCompressor::setInputCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstP
   inputCloud.height = 1;
   inputCloud.width  = static_cast<uint32_t>(j);
   inputCloud.is_dense = true;
+
+  Publish();
 }
 
-void CloudCompressor::setInputCloud(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr & value)
+void CloudCompressor::compressCloud(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr & value)
 {
   //pcl::copyPointCloud(*value, inputCloud);
   inputCloud = *value;
-}
 
-void CloudCompressor::setDataReceived(bool value)
-{
-  dataReceived = value;
+  Publish();
 }
 
 
 // Callback for ROS subscriber
 void CloudCompressor::Publish(){
 
-  if(dataReceived){
-    dataReceived = false;
+  // Get transformation published by master
+  tf::StampedTransform transform;
+  try{
+    tfListener.lookupTransform(globalFrame, localFrame, ros::Time(0), transform);
+  }
+  catch (tf::TransformException & ex) {
+    ROS_ERROR("Local TF: %s",ex.what());
+    return;
+  }
 
-    clock_t start = clock();
+  // Transform the point cloud
+  pcl_ros::transformPointCloud(inputCloud, *transformedCloud, transform);
 
-    // Transform the point cloud
-    pcl_ros::transformPointCloud(inputCloud, *transformedCloud, transform);
-
-    clock_t t1 = clock();
-
-    // Crop the point cloud
+  // Crop the point cloud only if crop box is defined
+  if (crop.getMin() == crop.getMax()){
+    croppedCloud = transformedCloud;
+  }
+  else {
     crop.setInputCloud(transformedCloud);
-    clock_t t2 = clock();
     crop.filter(*croppedCloud);
+  }
 
-    clock_t t3 = clock();
-    // Stream for storing serialized compressed point cloud
-    std::stringstream compressedData;
+  // Stream for storing serialized compressed point cloud
+  std::stringstream compressedData;
 
-    clock_t t4 = clock();
+  // Encode point cloud to stream
+  pointCloudEncoder.encodePointCloud(croppedCloud, compressedData);
 
-    // Encode point cloud to stream
-    pointCloudEncoder.encodePointCloud(croppedCloud, compressedData);
-
-    clock_t end = clock();
-    double time1 = (double) (t1-start) / CLOCKS_PER_SEC * 1000.0;
-    double time2 = (double) (t2-t1) / CLOCKS_PER_SEC * 1000.0;
-    double time3 = (double) (t3-t2) / CLOCKS_PER_SEC * 1000.0;
-    double time4 = (double) (t4-t3) / CLOCKS_PER_SEC * 1000.0;
-    double time5 = (double) (end-t4) / CLOCKS_PER_SEC * 1000.0;
-    double time = (double) (end-start) / CLOCKS_PER_SEC * 1000.0;
-
-    // Publish the encoded stream
+  // Publish the encoded stream if not empty
+  if(compressedData.rdbuf()->in_avail() != 0){
     std_msgs::String msg;
     msg.data = compressedData.str();
     pub.publish(msg);
+  }
+  if (showStatistics)
+  {
+    float input_size = static_cast<float> (inputCloud.size());
+    float cropped_size = static_cast<float> (croppedCloud->size());
 
-    if (showStatistics)
-    {
-      float input_size = static_cast<float> (inputCloud.size());
-      float cropped_size = static_cast<float> (croppedCloud->size());
+    logStream << input_size << "\t" << static_cast<float> ((input_size) * (4.0f * sizeof (float))) / 1024.0f << "\t";
+    logStream << cropped_size << "\t" << static_cast<float> ((cropped_size) * (4.0f * sizeof (float))) / 1024.0f << "\t";
 
-      //				PCL_INFO ("*** POINTCLOUD FILTERING ***\n");
-      //
-      //				PCL_INFO ("Number of points in original cloud: %.0f\n", input_size);
-      //				PCL_INFO ("Size original point cloud: %.0f kBytes\n", static_cast<float> ((input_size) * (3.0f * sizeof (float))) / 1024.0f);
-      //				PCL_INFO ("Number of points in cropped cloud: %.0f\n", cropped_size);
-      //				PCL_INFO ("Size cropped point cloud: %f kBytes\n\n", static_cast<float> ((cropped_size) * (3.0f * sizeof (float))) / 1024.0f);
-
-      logStream << input_size << "\t" << static_cast<float> ((input_size) * (4.0f * sizeof (float))) / 1024.0f << "\t";
-      logStream << cropped_size << "\t" << static_cast<float> ((cropped_size) * (4.0f * sizeof (float))) / 1024.0f << "\t";
-      logStream << time1 << "\t";
-      logStream << time2 << "\t";
-      logStream << time3 << "\t";
-      logStream << time4 << "\t";
-      logStream << time5 << "\t";
-      logStream << time << std::endl;
-    }
   }
 
 }
