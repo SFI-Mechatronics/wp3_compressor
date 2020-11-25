@@ -26,11 +26,11 @@ void PointCloudCompression::encodePointCloud (const PointCloudConstPtr &cloud_ar
     i_frame |= (recent_tree_depth != this->getTreeDepth ());// | !(iFrameCounter%10);
 
     // enable I-frame rate
-    // if (i_frame_counter++==i_frame_rate)
-    // {
-    //   i_frame_counter =0;
-    //   i_frame = true;
-    // }
+    if (i_frame_counter++==i_frame_rate)
+    {
+      i_frame_counter =0;
+      i_frame = true;
+    }
 
     // increase frameID
     frame_ID++;
@@ -43,7 +43,6 @@ void PointCloudCompression::encodePointCloud (const PointCloudConstPtr &cloud_ar
     if (i_frame){
       // i-frame encoding - encode tree structure without referencing previous buffer
       this->serializeTree (binary_tree_data_vector, false);
-      i_frame = false;
     }
     else
       // p-frame encoding - XOR encoded tree structure
@@ -57,7 +56,7 @@ void PointCloudCompression::encodePointCloud (const PointCloudConstPtr &cloud_ar
 
     // prepare for next frame
     this->switchBuffers ();
-
+    i_frame = false;
 
     if (b_show_statistics)
     {
