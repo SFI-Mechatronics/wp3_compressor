@@ -113,6 +113,10 @@ int main(int argc, char **argv)
     ROS_INFO("Crop Box: (%.2f , %.2f , %.2f) -> (%.2f , %.2f , %.2f)", minPT[0], minPT[1], minPT[2], maxPT[0], maxPT[1], maxPT[2]);
 
     wp3::CloudCompressor compressor(outputTopic, globalFrame, localFrame, resolution, _IFRAMERATE, minPT, maxPT, _STATISTICS);
+
+    ros::Subscriber sub;
+
+    switch(inputType){
     case 0:
       sub = nh.subscribe<pcl::PointCloud<pcl::PointXYZ> >(inputTopic, 1, boost::bind(&roscallback<pcl::PointXYZ>, _1, &compressor));
       break;
@@ -127,8 +131,7 @@ int main(int argc, char **argv)
     ROS_INFO("%s", "Starting node.");
     // Wait for TF listener to register TFs.
     ros::Duration(1.0).sleep();
-
-
+    
     ros::spin();
 
 
