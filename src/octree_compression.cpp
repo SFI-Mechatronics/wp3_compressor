@@ -11,6 +11,8 @@ namespace wp3 {
 
 void PointCloudCompression::encodePointCloud (const PointCloudConstPtr &cloud_arg, std::ostream& compressed_tree_data_out_arg){
 
+  unsigned char recent_tree_depth = static_cast<unsigned char> (this->getTreeDepth ());
+
   // initialize octree
   this->setInputCloud (cloud_arg);
 
@@ -39,26 +41,21 @@ void PointCloudCompression::encodePointCloud (const PointCloudConstPtr &cloud_ar
 
     // serialize octree
     if (i_frame){
-      //		//  Build tree from scratch
-      //			this->deleteTree();
-      //			this->setResolution (octree_resolution_);
-      //			this->defineBoundingBox(minX_, minY_, minZ_, maxX_, maxY_, maxZ_);
-      //			this->addPointsFromInputCloud ();
       // i-frame encoding - encode tree structure without referencing previous buffer
       this->serializeTree (binary_tree_data_vector, false);
+      i_frame = false;
     }
     else
       // p-frame encoding - XOR encoded tree structure
       this->serializeTree (binary_tree_data_vector, true);
 
     // write frame header information to stream
-    this->writeFrameHeader (compressed_tree_data_out_arg);
+    writeFrameHeader (compressed_tree_data_out_arg);
 
     // apply entropy coding to the content of all data vectors and send data to output stream
-    this->entropyEncoding (compressed_tree_data_out_arg);
+    entropyEncoding (compressed_tree_data_out_arg);
 
     // prepare for next frame
-    recent_tree_depth = this->getTreeDepth ();
     this->switchBuffers ();
 
 
@@ -67,23 +64,7 @@ void PointCloudCompression::encodePointCloud (const PointCloudConstPtr &cloud_ar
       float bytes_per_XYZ = static_cast<float> (compressed_point_data_len) / static_cast<float> (point_count);
       float bytes_per_intensity = static_cast<float> (compressed_intensity_data_len) / static_cast<float> (point_count);
 
-      //			PCL_INFO ("*** POINTCLOUD ENCODING ***\n");
       PCL_INFO ("Frame ID: %d\n", frame_ID);
-      //			if (i_frame_)
-      //				PCL_INFO ("Encoding Frame: Intra frame\n");
-      //			else
-      //				PCL_INFO ("Encoding Frame: Prediction frame\n");
-      //			PCL_INFO ("Number of encoded points (voxels): %ld\n", point_count_);
-      //			PCL_INFO ("XYZ compression percentage: %f%%\n", bytes_per_XYZ / (3.0f * sizeof (float)) * 100.0f);
-      //			PCL_INFO ("XYZ bytes per point: %f bytes\n", bytes_per_XYZ);
-      //			PCL_INFO ("Intensity bytes per point: %f bytes\n", bytes_per_intensity);
-      //
-      //			PCL_INFO ("Size of uncompressed point cloud: %f kBytes\n", static_cast<float> ((point_count_) * (3.0f * sizeof (float))) / 1024.0f);
-      //			PCL_INFO ("Size of compressed point cloud: %f kBytes\n", static_cast<float> (compressed_point_data_len_ + compressed_intensity_data_len_) / 1024.0f);
-      //
-      //			PCL_INFO ("Total encoded bytes per point: %f bytes\n", bytes_per_XYZ + bytes_per_intensity);
-      //			PCL_INFO ("Total compression percentage: %f%%\n", (bytes_per_XYZ + bytes_per_intensity) / (3.0f * sizeof (float)) * 100.0f);
-      //			PCL_INFO ("Compression ratio: %f\n\n", static_cast<float> (3.0f * sizeof (float)) / static_cast<float> (bytes_per_XYZ + bytes_per_intensity));
 
       logStream << point_count << "\t" << bytes_per_XYZ / (4.0f * sizeof (float)) * 100.0f << "\t";
       logStream << bytes_per_XYZ << "\t" << bytes_per_intensity << "\t";
@@ -94,8 +75,6 @@ void PointCloudCompression::encodePointCloud (const PointCloudConstPtr &cloud_ar
       logStream << std::endl;
 
     }
-
-    i_frame = false;
 
   } else {
     PCL_INFO ("Info: Dropping empty point cloud\n");

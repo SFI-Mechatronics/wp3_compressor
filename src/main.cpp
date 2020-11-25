@@ -8,9 +8,20 @@
 
 #include <Eigen/Eigen>
 
-#include "wp3_compressor/defines.h"
 #include "wp3_compressor/compressor.h"
 
+// Compression defines
+#define _STATISTICS false
+//#define _OCTREERESOLUTION 0.03
+#define _IFRAMERATE 30
+
+// Filter defines
+#define _MINX 0.0
+#define _MINY 0.0
+#define _MINZ 0.1
+#define _MAXX 10.0
+#define _MAXY 10.0
+#define _MAXZ 4.0
 
 void killHandler(int)
 {
@@ -25,37 +36,19 @@ void killHandler(int)
 
 // Callback for ROS subscriber
 template<typename PT>
-void roscallback(const typename pcl::PointCloud<PT>::ConstPtr & cloud, wp3::CloudCompressor * compressor,
-                    tf::TransformListener * tfListener){
+void roscallback(const typename pcl::PointCloud<PT>::ConstPtr & cloud, wp3::CloudCompressor * compressor){
 
-  // Get transformation published by master
-  tf::StampedTransform transform;
-  if (compressor->getGlobalFrame() == compressor->getLocalFrame())
-      transform.setIdentity();
-      else  {
-        try  {
-        tfListener->lookupTransform(compressor->getGlobalFrame(), compressor->getLocalFrame(), ros::Time(0), transform);
-        }
-        catch (tf::TransformException & ex) {
-        ROS_ERROR("Local TF: %s",ex.what());
-        return;
-        }
-      }
-  compressor->setTransform(transform);
-  compressor->setInputCloud(cloud);
-  compressor->setDataReceived(true);
+  compressor->compressCloud(cloud);
 }
 
 int main(int argc, char **argv)
 {
   // Initialize ROS
-  ros::init(argc, argv, _DEFAULTNODENAME, ros::init_options::NoSigintHandler | ros::init_options::AnonymousName);
+  ros::init(argc, argv, "wp3_compressor", ros::init_options::NoSigintHandler | ros::init_options::AnonymousName);
   ros::NodeHandle nh("~");
 
   signal(SIGINT, killHandler);
   signal(SIGTERM, killHandler);
-
-  ros::Rate loopRate(_ROSRATE);
 
   if(!nh.hasParam("resolution"))
     ROS_ERROR("%s","Missing _resolution:=<resolution> parameter! Shutting down...");
@@ -78,7 +71,7 @@ int main(int argc, char **argv)
     std::string globalFrame;
     double resolution;
     float minx, maxx, miny, maxy, minz, maxz;
-    bool crop = false;
+    bool crop = true;
 
     nh.getParam("resolution", resolution);
     nh.getParam("input_topic", inputTopic);
@@ -90,26 +83,13 @@ int main(int argc, char **argv)
     if(nh.hasParam("crop"))
       nh.getParam("crop", crop);
 
-    if(nh.hasParam("min_x"))
-      nh.getParam("min_x", minx);
-    else      minx = _MINX;
-    if(nh.hasParam("max_x"))
-      nh.getParam("max_x", maxx);
-    else      maxx = _MAXX;
-
-    if(nh.hasParam("min_y"))
-      nh.getParam("min_y", miny);
-    else      miny = _MINY;
-    if(nh.hasParam("max_y"))
-      nh.getParam("max_y", maxy);
-    else      maxy = _MAXY;
-
-    if(nh.hasParam("min_z"))
-      nh.getParam("min_z", minz);
-    else      minz = _MINZ;
-    if(nh.hasParam("max_z"))
-      nh.getParam("max_z", maxz);
-    else      maxz = _MAXZ;
+    nh.hasParam("min_x") ? nh.getParam("min_x", minx) : minx = _MINX;
+    nh.hasParam("min_y") ? nh.getParam("min_y", miny) : miny = _MINY;
+    nh.hasParam("min_z") ? nh.getParam("min_z", minz) : minz = _MINZ;
+    nh.hasParam("max_x") ? nh.getParam("max_x", maxx) : maxx = _MAXX;
+    nh.hasParam("max_y") ? nh.getParam("max_y", maxy) : maxy = _MAXY;
+    nh.hasParam("max_z") ? nh.getParam("max_z", maxz) : maxz = _MAXZ;
+     
 
     ROS_INFO("Initializing with the following parameters:");
     ROS_INFO("Resolution: %.2f m", resolution);
@@ -119,9 +99,6 @@ int main(int argc, char **argv)
 
     ROS_INFO("Local frame: %s", localFrame.c_str());
     ROS_INFO("Global frame: %s", globalFrame.c_str());
-
-    ROS_INFO("Crop Box: (%.2f , %.2f , %.2f) -> (%.2f , %.2f , %.2f)", minx, miny, minz, maxx, maxy, maxz);
-
 
     Eigen::Vector4f minPT, maxPT;
     if(crop){
@@ -133,17 +110,14 @@ int main(int argc, char **argv)
       maxPT.setZero();
     }
 
+    ROS_INFO("Crop Box: (%.2f , %.2f , %.2f) -> (%.2f , %.2f , %.2f)", minPT[0], minPT[1], minPT[2], maxPT[0], maxPT[1], maxPT[2]);
 
     wp3::CloudCompressor compressor(outputTopic, globalFrame, localFrame, resolution, _IFRAMERATE, minPT, maxPT, _STATISTICS);
-
-    tf::TransformListener tfListener;
-    ros::Subscriber sub;
-    switch (inputType){
     case 0:
-      sub = nh.subscribe<pcl::PointCloud<pcl::PointXYZ> >(inputTopic, 1, boost::bind(&roscallback<pcl::PointXYZ>, _1, &compressor, &tfListener));
+      sub = nh.subscribe<pcl::PointCloud<pcl::PointXYZ> >(inputTopic, 1, boost::bind(&roscallback<pcl::PointXYZ>, _1, &compressor));
       break;
     case 1:
-      sub = nh.subscribe<pcl::PointCloud<pcl::PointXYZI> >(inputTopic, 1, boost::bind(&roscallback<pcl::PointXYZI>, _1, &compressor, &tfListener));
+      sub = nh.subscribe<pcl::PointCloud<pcl::PointXYZI> >(inputTopic, 1, boost::bind(&roscallback<pcl::PointXYZI>, _1, &compressor));
       break;
     default:
       ROS_ERROR("%s","Incorrect input_type used!");
@@ -154,27 +128,9 @@ int main(int argc, char **argv)
     // Wait for TF listener to register TFs.
     ros::Duration(1.0).sleep();
 
-    while(ros::ok()){
-#if _STATISTICS
-      time_t start = clock();
-#endif
 
-      ros::spinOnce();
-#if _STATISTICS
-      time_t middle = clock();
-#endif
-      compressor.Publish();
+    ros::spin();
 
-#if _STATISTICS
-      time_t end = clock();
-      double time1 = (double) (middle-start) / CLOCKS_PER_SEC * 1000.0;
-      double time2 = (double) (end-middle) / CLOCKS_PER_SEC * 1000.0;
-      double time = (double) (end-start) / CLOCKS_PER_SEC * 1000.0;
-      std::cout << "ROS Cycle time: " << time1 << " + " << time2 << " = " << time << " ms" << std::endl;
-#endif
-
-      loopRate.sleep();
-    }
 
   } // end else if has sensorname
 

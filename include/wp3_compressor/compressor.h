@@ -46,26 +46,18 @@ class CloudCompressor
 public:
   // Constructor
   CloudCompressor(std::string outputMsgTopic, std::string globalFrame, std::string localFrame, double octreeResolution,
-                  unsigned int iFrameRate, Eigen::Vector4f minPT, Eigen::Vector4f maxPT, bool showStatistics);
+    unsigned int iFrameRate, Eigen::Vector4f minPT, Eigen::Vector4f maxPT, bool showStatistics);
 
   // Deconstrucor
   ~CloudCompressor();
 
-  // Process and publish compressed cloud.
-  void Publish();
-
-  void setTransform(const tf::StampedTransform & value);
-
-  std::string getGlobalFrame() const;
-
-  std::string getLocalFrame() const;
-
-  void setInputCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr & value);
-  void setInputCloud(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr & value);
-
-  void setDataReceived(bool value);
+  void compressCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr & value);
+  void compressCloud(const pcl::PointCloud<pcl::PointXYZI>::ConstPtr & value);
 
 private:
+
+  // Process and publish compressed cloud.
+  void Publish();
 
   // ROS variables
   std::string globalFrame;
@@ -74,7 +66,7 @@ private:
   ros::NodeHandle nh;
   ros::Publisher pub;
 
-  tf::StampedTransform transform;
+  tf::TransformListener tfListener;
 
   PointCloud inputCloud;
 
@@ -90,8 +82,6 @@ private:
 
   // Box crop filter
   pcl::CropBox<PointType> crop;
-
-  bool dataReceived;
 
   // Logging
   bool showStatistics;
