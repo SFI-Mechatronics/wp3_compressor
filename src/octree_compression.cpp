@@ -26,11 +26,11 @@ void PointCloudCompression::encodePointCloud (const PointCloudConstPtr &cloud_ar
     i_frame |= (recent_tree_depth != this->getTreeDepth ());// | !(iFrameCounter%10);
 
     // enable I-frame rate
-    if (i_frame_counter++==i_frame_rate)
-    {
-      i_frame_counter =0;
-      i_frame = true;
-    }
+    // if (i_frame_counter++==i_frame_rate)
+    // {
+    //   i_frame_counter =0;
+    //   i_frame = true;
+    // }
 
     // increase frameID
     frame_ID++;

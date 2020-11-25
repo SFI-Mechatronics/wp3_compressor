@@ -5,27 +5,22 @@
 <!-- 150 deg  2.61799 rad -->
 <!-- 140 deg  2.44346 rad -->
 
-<!-- ================= Kinect ======================= -->
-    <node pkg="tf" type="static_transform_publisher" name="jetson6_ir_optical_frame2"
-        args="0.65 8.9 4.2 -2.11 0.0 -2.44 world jetson6_ir_optical_frame2 100"/>
-
-	
-<!-- ================= Velodyne VLP-16 ======================= -->
-    <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch">
-	<arg name="rpm" value="1200" />
-    </include>
-
-    <node pkg="tf" type="static_transform_publisher" name="velodyne_tf"
-        args="0 -0.1 0 0 -1.570796 1.570796 jetson6_ir_optical_frame2 velodyne 100"/>
 
 <!-- ================= Compressor ======================= -->
     <node pkg="wp3_compressor" type="wp3_compressor_node" name="jetson6_comp_velodyne">
         <param name="resolution" value="0.04" />
         <param name="input_topic" value="/velodyne_points" />
         <param name="input_type" value="1" />
-        <param name="output_topic" value="/jetson6/wp3/velodyne_comp" />
+        <param name="output_topic" value="/roof/velodyne_comp" />
         <param name="local_frame" value="velodyne" />
-        <param name="global_frame" value="world" />
+        <param name="global_frame" value="myworld" />
+        <param name="min_x" value="0.0" />
+        <param name="max_x" value="10.0" />
+        <param name="min_y" value="0.0" />
+        <param name="max_y" value="10.0" />
+        <param name="min_z" value="0.0" />
+        <param name="max_z" value="5.0" />
+        <param name="crop"  value="true" />
     </node>   
 
 </launch>

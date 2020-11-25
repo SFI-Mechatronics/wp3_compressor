@@ -6,6 +6,7 @@
  */
 
 #include "wp3_compressor/compressor.h"
+#include "wp3_compressor/comp_msg.h"
 #include <math.h>
 
 namespace wp3 {
@@ -32,7 +33,7 @@ CloudCompressor::CloudCompressor(std::string outputMsgTopic, std::string globalF
   crop.setMin(minPT);
   crop.setMax(maxPT);
 
-  pub = nh.advertise<std_msgs::String>(outputMsgTopic, 1);
+  pub = nh.advertise<wp3_compressor::comp_msg>(outputMsgTopic, 1);
 
   normDist = (octreeResolution * 360.0 * 212.0)/(2.0 * 30.0 * 3.14159265);
   double pi = 3.14159265;
@@ -66,6 +67,9 @@ void CloudCompressor::compressCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstP
   inputCloud.height = 1;
   inputCloud.width  = static_cast<uint32_t>(j);
   inputCloud.is_dense = true;
+  inputCloud.header.stamp = value->header.stamp;
+  inputCloud.header.seq = value->header.seq;
+  inputCloud.header.frame_id = value->header.frame_id;
 
   Publish();
 }
@@ -112,8 +116,12 @@ void CloudCompressor::Publish(){
 
   // Publish the encoded stream if not empty
   if(compressedData.rdbuf()->in_avail() != 0){
-    std_msgs::String msg;
+    wp3_compressor::comp_msg msg;
     msg.data = compressedData.str();
+    msg.header.seq = inputCloud.header.seq;
+    pcl_conversions::fromPCL(inputCloud.header.stamp, msg.header.stamp);
+    msg.header.frame_id = croppedCloud->header.frame_id;
+
     pub.publish(msg);
   }
   if (showStatistics)

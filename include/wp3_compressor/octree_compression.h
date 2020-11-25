@@ -134,7 +134,7 @@ public:
       logStream << "NumPoints\tXYZpc\tXYZbpp\tINTbpp\tOsize\tCsize\tBPP\tCPC\tRATIO" << std::endl;
     }
 
-    frame_header_identifier = "<WP3-OCT-COMPRESSED>";
+    frame_header_identifier = "<HEAD>";
 
     this->setResolution (octree_resolution);
     this->defineBoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
