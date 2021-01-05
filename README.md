@@ -16,13 +16,19 @@ The wp3_compressor package has been tested under ROS Kinetic Kame and Ubuntu 16.
 
 If you use this work in an academic context, please cite the following publication:
 
-* J. Dybedal, A. Aalerud and G. Hovland, **Embedded Processing and Compression of 3D Sensor Data for Large Scale Industrial Environments**. Submitted. to Sensors, 2018. (Accepted, awaiting publication)
+* J. Dybedal, A. Aalerud, and G. Hovland, “**Embedded Processing and Compression of 3D Sensor Data for Large Scale Industrial Environments**,”. Sensors, vol. 19, no. 3, p. 636, Feb. 2019.
 
         @article{Dybedal2019,
-            author = {Dybedal, Joacim and Aalerud, Atle and Hovland, Geir},
-            journal = {submitted to Sensors},
-            title = {{Embedded Processing and Compression of 3D Sensor Data for Large Scale Industrial Environments}},
-            year = {2019}
+                author = {Dybedal, Joacim and Aalerud, Atle and Hovland, Geir},
+                title = {{Embedded Processing and Compression of 3D Sensor Data for Large Scale Industrial Environments}},
+                doi = {10.3390/s19030636},
+                journal = {Sensors},
+                month = {feb},
+                number = {3},
+                pages = {636},
+                publisher = {Multidisciplinary Digital Publishing Institute},
+                volume = {19},
+                year = {2019}
         }
 
 ## Installation
